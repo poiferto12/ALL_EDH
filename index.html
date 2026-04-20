@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ALL_EDH - Commander Deck Builder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>ALL_EDH</h1>
+      <p>Crea sugerencias de mazos Commander con Scryfall y prioriza tu colección.</p>
+
+      <form id="deck-form">
+        <label for="commander">Comandante</label>
+        <input id="commander" name="commander" type="text" placeholder="Atraxa, Praetors' Voice" required />
+
+        <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
+        <textarea id="collection" name="collection" rows="8" placeholder="Sol Ring\nArcane Signet\n2x Swords to Plowshares"></textarea>
+
+        <button type="submit">Generar sugerencias</button>
+      </form>
+
+      <section id="status" aria-live="polite"></section>
+      <section id="summary"></section>
+      <ol id="recommendations"></ol>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
