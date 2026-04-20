@@ -145,33 +145,30 @@ function renderRecommendations(recommendations, collectionCounts, scoringContext
         ...scoringContext 
       });
 
-      // 1. Imagen de la carta (soporta cartas de doble cara)
-      const imageUrl = card.image_uris?.art_crop || card.card_faces?.[0]?.image_uris?.art_crop || '';
-      if (imageUrl) {
-        const img = document.createElement('img');
-        img.src = imageUrl;
-        img.className = 'card-image';
-        img.alt = `Arte de ${card.name}`;
-        img.loading = 'lazy'; // Importante para no asfixiar la red cargando 100 imágenes de golpe
-        item.appendChild(img);
+      // 1. Imagen pequeña de previsualización
+      const dropUrl = card.image_uris?.art_crop || card.card_faces?.[0]?.image_uris?.art_crop || '';
+      if (dropUrl) {
+        const miniImg = document.createElement('img');
+        miniImg.src = dropUrl;
+        miniImg.className = 'card-image';
+        miniImg.loading = 'lazy';
+        item.appendChild(miniImg);
       }
 
-      // Contenedor para el texto
-      const contentRow = document.createElement('div');
-      contentRow.className = 'card-content';
+      // Contenedor del contenido textual
+      const contentBox = document.createElement('div');
+      contentBox.className = 'card-content';
 
-      // 2. Primer bloque flex (Nombre y Badge)
+      // Primer bloque flex (Nombre y Badge)
       const infoRow = document.createElement('div');
       infoRow.className = 'card-info';
       
       const nameEl = document.createElement('span');
       nameEl.textContent = card.name;
-      // Estilo extra para asegurar que el nombre largo no desajuste el grid
       nameEl.style.whiteSpace = 'nowrap';
       nameEl.style.overflow = 'hidden';
       nameEl.style.textOverflow = 'ellipsis';
       nameEl.style.marginRight = '0.5rem';
-      
       infoRow.appendChild(nameEl);
 
       const isOwned = collectionCounts.has(normalizeCardName(card.name));
@@ -179,16 +176,49 @@ function renderRecommendations(recommendations, collectionCounts, scoringContext
       badge.style.flexShrink = '0';
       infoRow.appendChild(badge);
       
-      // 3. Segundo bloque numérico (Precio, cmc y puntaje)
+      // Segundo bloque paramétrico (Precio, cmc y puntaje)
       const ptsRow = document.createElement('div');
       ptsRow.className = 'card-pts';
       ptsRow.textContent = `Pts: ${finalScore.toFixed(1)} · CMR: ${card.cmc || 0} · Precio: $${parseFloat(card.prices?.usd || 0).toFixed(2)}`;
 
-      contentRow.appendChild(infoRow);
-      contentRow.appendChild(ptsRow);
-      
-      item.appendChild(contentRow);
+      contentBox.appendChild(infoRow);
+      contentBox.appendChild(ptsRow);
+      item.appendChild(contentBox);
       list.appendChild(item);
+
+      // Eventos para mostrar la carta completa estilo Tooltip (Full Card)
+      const fullImageUrl = card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal;
+      
+      if (fullImageUrl) {
+        const tooltip = document.getElementById('card-tooltip');
+        const tooltipImg = document.getElementById('tooltip-img');
+
+        item.addEventListener('mouseenter', () => {
+          tooltipImg.src = fullImageUrl;
+          tooltip.style.display = 'block';
+        });
+
+        item.addEventListener('mousemove', (e) => {
+          // Posicionamos el tooltip evitando que se salga por debajo de la pantalla
+          let tooltipX = e.clientX + 20;
+          let tooltipY = e.clientY - 100;
+          
+          if (tooltipY + 350 > window.innerHeight) {
+            tooltipY = window.innerHeight - 360;
+          }
+          if (tooltipX + 260 > window.innerWidth) {
+            tooltipX = e.clientX - 280; // Si no cabe por la derecha, lo ponemos a la izquierda del ratón
+          }
+
+          tooltip.style.left = `${tooltipX}px`;
+          tooltip.style.top = `${tooltipY}px`;
+        });
+
+        item.addEventListener('mouseleave', () => {
+          tooltip.style.display = 'none';
+          tooltipImg.src = '';
+        });
+      }
     }
     
     section.appendChild(list);

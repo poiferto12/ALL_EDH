@@ -108,6 +108,13 @@ button {
   padding: 0.6rem;
   border-radius: 6px;
   border-left: 4px solid #748ffc;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease;
+}
+
+.card-item:hover {
+  transform: translateX(4px);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -115,11 +122,14 @@ button {
     background: rgba(255, 255, 255, 0.03);
     border-left-color: #5c7cfa;
   }
+  .card-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 .card-image {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   object-fit: cover;
   border-radius: 4px;
   flex-shrink: 0;
