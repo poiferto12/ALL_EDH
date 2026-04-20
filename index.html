@@ -15,6 +15,20 @@
         <label for="commander">Comandante</label>
         <input id="commander" name="commander" type="text" placeholder="Atraxa, Praetors' Voice" required />
 
+        <label for="theme">Estrategia / Arquetipo principal</label>
+        <select id="theme" name="theme">
+          <option value="none">Sinergia General (Automático)</option>
+          <option value="voltron">Voltron (Auras/Equipos)</option>
+          <option value="lifegain">Ganancia de Vidas (Lifegain)</option>
+          <option value="tokens">Criaturas Ficha (Tokens)</option>
+          <option value="aristocrats">Sacrificio (Aristocrats)</option>
+          <option value="burn">Daño Directo (Burn)</option>
+          <option value="storm">Spellslinger / Storm (Hechizos)</option>
+          <option value="artifacts">Artefactos Completos</option>
+          <option value="graveyard">Cementerio / Reanimator</option>
+          <option value="aggro">Ataque Masivo (Aggro)</option>
+        </select>
+
         <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
         <textarea id="collection" name="collection" rows="8" placeholder="Sol Ring\nArcane Signet\n2x Swords to Plowshares"></textarea>
 

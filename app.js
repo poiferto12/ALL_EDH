@@ -314,6 +314,9 @@ async function handleSubmit(event) {
     // 3. Consultamos la API oculta de EDHREC
     const edhrecData = await fetchEdhrecData(commander.name);
     
+    // Obtenemos el Arquetipo / Estrategia del dropdown
+    const theme = form.theme.value;
+
     let commanderSynergyMap = new Map();
     let cooccurrenceMap = new Map();
 
@@ -329,7 +332,8 @@ async function handleSubmit(event) {
     const scoringContext = {
       commanderSynergyMap,
       deckSynergyMap,
-      cooccurrenceMap
+      cooccurrenceMap,
+      theme
     };
 
     const ordered = sortByScore({

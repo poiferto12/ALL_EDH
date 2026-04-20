@@ -4,10 +4,25 @@
 
 export const defaultWeights = {
 owned: 50,
+themeMatch: 60,  // Gran bonificación extra por encajar con el Arquetipo
 commanderSynergy: 40,
 deckSynergy: 25,
 cooccurrence: 20,
 popularity: 15
+};
+
+// ---------- THEMES / ARQUETIPOS ----------
+// Expresiones regulares que buscan mecánicas específicas para potenciar arquetipos
+const themePatterns = {
+  voltron: /\b(equip|enchant creature|aura|attached|commander gets|commander has)\b/,
+  lifegain: /\b(gain life|lifelink|whenever you gain life|life total|pay life)\b/,
+  tokens: /\b(create.*token|populate|doubling season|token creatures)\b/,
+  aristocrats: /\b(sacrifice|when.*dies|whenever another creature dies|dies, target player loses)\b/,
+  burn: /\b(damage to target|damage to each|deals damage|deals.*damage to any target)\b/,
+  storm: /\b(instant or sorcery|copy target spell|storm|magecraft|cast an instant)\b/,
+  artifacts: /\b(artifact|treasure|clue|food|historic|metalcraft|affinity for artifacts)\b/,
+  graveyard: /\b(return target.*from your graveyard|mill|reanimate|dredge|escape|flashback)\b/,
+  aggro: /\b(haste|trample|menace|combat phase|attacking creatures|creatures you control get \+)\b/
 };
 
 // ---------- UTIL ----------
@@ -177,13 +192,23 @@ function computePopularityScore(rank) {
 
 // ---------- SCORE PRINCIPAL ----------
 
-export function computeCardScore({card, collectionCounts, commanderSynergyMap, deckSynergyMap, cooccurrenceMap, weights = defaultWeights}) {
+export function computeCardScore({card, collectionCounts, commanderSynergyMap, deckSynergyMap, cooccurrenceMap, theme, weights = defaultWeights}) {
     const name = normalizeCardName(card.name);
     let score = 0;
 
     // Si el usuario la tiene
     if (collectionCounts.has(name)) {
         score += weights.owned;
+    }
+
+    // Comprobar Sinergia de Arquetipo / Tema
+    if (theme && theme !== "none" && themePatterns[theme]) {
+       const text = (card.oracle_text || "").toLowerCase();
+       const typeMatch = (card.type_line || "").toLowerCase();
+       // Si el texto de la carta u originariamente su tipo tiene relación con las mecánicas clave del arquetipo
+       if (text.match(themePatterns[theme]) || typeMatch.match(themePatterns[theme])) {
+         score += weights.themeMatch;
+       }
     }
 
     // Sinergia con comandante
@@ -213,6 +238,7 @@ collectionCounts,
 commanderSynergyMap,
 deckSynergyMap,
 cooccurrenceMap,
+theme,
 weights = defaultWeights
 }) {
 return [...cards].sort((a, b) => {
@@ -222,6 +248,7 @@ return [...cards].sort((a, b) => {
     commanderSynergyMap,
     deckSynergyMap,
     cooccurrenceMap,
+    theme,
     weights
     });
 
@@ -231,6 +258,7 @@ return [...cards].sort((a, b) => {
     commanderSynergyMap,
     deckSynergyMap,
     cooccurrenceMap,
+    theme,
     weights
     });
 
