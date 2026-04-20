@@ -18,6 +18,40 @@
         <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
         <textarea id="collection" name="collection" rows="8" placeholder="Sol Ring\nArcane Signet\n2x Swords to Plowshares"></textarea>
 
+        <fieldset style="display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px;">
+          <legend>Plantilla del Mazo (99 cartas en total)</legend>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <label style="display: flex; flex-direction: column;">Tierras
+              <input type="number" name="lands" value="36" min="0" max="50" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Ramp
+              <input type="number" name="ramp" value="10" min="0" max="30" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Robo (Draw)
+              <input type="number" name="draw" value="10" min="0" max="30" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Removal
+              <input type="number" name="removal" value="8" min="0" max="30" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Limpiamesas (Wipes)
+              <input type="number" name="wipe" value="3" min="0" max="10" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Tutores
+              <input type="number" name="tutor" value="2" min="0" max="10" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Protección
+              <input type="number" name="protection" value="5" min="0" max="15" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Recursión
+              <input type="number" name="recursion" value="3" min="0" max="15" style="width: 80px;" />
+            </label>
+          </div>
+          <small>El resto (hasta 99) se llenará con cartas de "Sinergia / Flexibles".</small>
+        </fieldset>
+
+        <label for="budget">Presupuesto Máximo ($) para cartas faltantes (0 = Sin límite)</label>
+        <input id="budget" name="budget" type="number" value="0" min="0" step="1" />
+
         <button type="submit">Generar sugerencias</button>
       </form>
 
