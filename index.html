@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ALL_EDH - Commander Deck Builder</title>
+    <meta name="description" content="Genera mazos de Commander optimizados usando Scryfall con heurísticas avanzadas" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="container">
       <h1>ALL_EDH</h1>
-      <p>Crea sugerencias de mazos Commander con Scryfall y prioriza tu colección.</p>
+      <p>Genera mazos de Commander optimizados con heuristicas avanzadas. Prioriza tu coleccion.</p>
 
       <form id="deck-form">
         <label for="commander">Comandante</label>
@@ -71,7 +72,7 @@
         <label for="budget">Presupuesto Máximo ($) para cartas faltantes (0 = Sin límite)</label>
         <input id="budget" name="budget" type="number" value="0" min="0" step="1" />
 
-        <button type="submit">Generar sugerencias</button>
+        <button type="submit" id="submit-btn">Generar Mazo</button>
       </form>
 
       <section id="status" aria-live="polite"></section>

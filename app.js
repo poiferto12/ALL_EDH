@@ -265,34 +265,51 @@ function updateText(id, text) {
 }
 
 async function fetchEdhrecData(commanderName) {
-  const url = `http://localhost:8000/api/commander/${encodeURIComponent(commanderName)}`;
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    console.warn(`No se encontraron datos en el servidor local para ${commanderName}`);
+  try {
+    const url = `http://localhost:8000/api/commander/${encodeURIComponent(commanderName)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+    
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      return null;
+    }
+    return response.json();
+  } catch {
+    // EDHREC server not available - this is expected in production
     return null;
   }
-  return response.json();
 }
 
 async function handleSubmit(event) {
   event.preventDefault();
-  updateText('status', 'Buscando comandante y cartas recomendadas...');
-  updateText('summary', '');
-  document.getElementById('recommendations').replaceChildren();
-
+  
+  const submitBtn = document.getElementById('submit-btn');
   const form = event.currentTarget;
   const commanderName = form.commander.value.trim();
-  const collectionCounts = parseCollection(form.collection.value);
-
+  
   if (!commanderName) {
     updateText('status', 'Debes indicar un comandante.');
     return;
   }
+  
+  // Set loading state
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Generando...';
+  document.body.classList.add('loading');
+  
+  updateText('status', 'Buscando comandante...');
+  updateText('summary', '');
+  document.getElementById('recommendations').replaceChildren();
+
+  const collectionCounts = parseCollection(form.collection.value);
 
   try {
     // 1. Validamos al Comandante en Scryfall (para tener el nombre exacto e identidad)
     const commander = await fetchCommander(commanderName);
+    updateText('status', `Comandante encontrado: ${commander.name}. Buscando cartas...`);
     
     // Extraemos la cantidad de categorías pedida (Plantilla HTML) y el presupuesto
     const plantillas = {
@@ -309,9 +326,11 @@ async function handleSubmit(event) {
 
     // 2. Traemos todos los posibles candidatos válidos de Scryfall
     const candidates = await fetchCandidates(commander.color_identity || []);
+    updateText('status', `Encontradas ${candidates.length} cartas candidatas. Calculando sinergia...`);
+    
     const withoutCommander = candidates.filter((card) => card.name !== commander.name);
     
-    // 3. Consultamos la API oculta de EDHREC
+    // 3. Consultamos la API oculta de EDHREC (opcional, timeout de 2s)
     const edhrecData = await fetchEdhrecData(commander.name);
     
     // Obtenemos el Arquetipo / Estrategia del dropdown
@@ -364,6 +383,11 @@ async function handleSubmit(event) {
     );
   } catch (error) {
     updateText('status', `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+  } finally {
+    // Reset loading state
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Generar Mazo';
+    document.body.classList.remove('loading');
   }
 }
 
