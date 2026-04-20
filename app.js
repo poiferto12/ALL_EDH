@@ -1,3 +1,5 @@
+console.log("[v0] app.js starting to load...");
+
 import {
   sortByScore,
   buildCommanderSynergyMap,
@@ -7,6 +9,8 @@ import {
   computeCardScore,
   getCardTags
 } from "./scoring.js";
+
+console.log("[v0] scoring.js imported successfully");
 
 const SCRYFALL_BASE = 'https://api.scryfall.com';
 
@@ -285,10 +289,12 @@ async function fetchEdhrecData(commanderName) {
 
 async function handleSubmit(event) {
   event.preventDefault();
+  console.log("[v0] handleSubmit called");
   
   const submitBtn = document.getElementById('submit-btn');
   const form = event.currentTarget;
   const commanderName = form.commander.value.trim();
+  console.log("[v0] Commander name:", commanderName);
   
   if (!commanderName) {
     updateText('status', 'Debes indicar un comandante.');
@@ -307,8 +313,11 @@ async function handleSubmit(event) {
   const collectionCounts = parseCollection(form.collection.value);
 
   try {
+    console.log("[v0] Starting try block...");
     // 1. Validamos al Comandante en Scryfall (para tener el nombre exacto e identidad)
+    console.log("[v0] Fetching commander from Scryfall...");
     const commander = await fetchCommander(commanderName);
+    console.log("[v0] Commander found:", commander.name);
     updateText('status', `Comandante encontrado: ${commander.name}. Buscando cartas...`);
     
     // Extraemos la cantidad de categorías pedida (Plantilla HTML) y el presupuesto
@@ -382,6 +391,7 @@ async function handleSubmit(event) {
       `Resultados: ${chosen.length} cartas (${owned} en colección). Presupuesto de inversión: $${deckData.stats.cost.toFixed(2)}. Curva de Maná promedio: ${deckData.stats.avgCmc.toFixed(2)}. ${completenessNote}`
     );
   } catch (error) {
+    console.log("[v0] Error caught:", error);
     updateText('status', `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
   } finally {
     // Reset loading state
@@ -392,5 +402,13 @@ async function handleSubmit(event) {
 }
 
 if (typeof document !== 'undefined') {
-  document.getElementById('deck-form').addEventListener('submit', handleSubmit);
+  console.log("[v0] Document exists, setting up event listener...");
+  const form = document.getElementById('deck-form');
+  if (form) {
+    form.addEventListener('submit', handleSubmit);
+    console.log("[v0] Event listener attached to deck-form");
+  } else {
+    console.error("[v0] ERROR: deck-form not found!");
+  }
 }
+console.log("[v0] app.js fully loaded");

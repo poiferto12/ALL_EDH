@@ -4,7 +4,7 @@ Generador de mazos de Commander para Magic: The Gathering con heuristica avanzad
 
 ## Caracteristicas
 
-- **Deteccion de combos conocidos**: Identifica piezas de combos clasicos de Commander (Dramatic Scepter, Kiki-Jiki combos, Thoracle, etc.)
+- **Deteccion de combos conocidos**: Identifica piezas de combos clasicos de Commander (pocos de momento)
 - **Paquetes de sinergia**: Reconoce grupos de cartas que funcionan bien juntas (Blink package, Aristocrats engine, etc.)
 - **Heuristica avanzada**: Evalua eficiencia de mana, palabras clave de combate, efectos ETB/death, escalabilidad en multiplayer
 - **Priorizacion de coleccion**: Las cartas que ya tienes reciben bonus para minimizar compras
