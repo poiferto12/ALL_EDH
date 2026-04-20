@@ -125,7 +125,14 @@ async function handleSubmit(event) {
     const missing = chosen.length - owned;
 
     updateText('status', `Comandante: ${commander.name}`);
-    updateText('summary', `Sugerencias: ${chosen.length} cartas. Priorizadas por colección: ${owned} en colección, ${missing} faltantes.`);
+    const completenessNote =
+      chosen.length < 99
+        ? ` Aviso: Scryfall devolvió solo ${chosen.length} cartas válidas para esta búsqueda, por lo que el mazo no está completo.`
+        : '';
+    updateText(
+      'summary',
+      `Sugerencias: ${chosen.length} cartas. Priorizadas por colección: ${owned} en colección, ${missing} faltantes.${completenessNote}`
+    );
   } catch (error) {
     updateText('status', `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
   }
