@@ -29,6 +29,16 @@
           <option value="aggro">Ataque Masivo (Aggro)</option>
         </select>
 
+        <label for="bracket">Nivel de Poder (Tier/Bracket)</label>
+        <select id="bracket" name="bracket">
+          <option value="any">Cualquiera / Automático</option>
+          <option value="1">Bracket 1 (Jank / Muy Casual, sin tutores ni maná rápido)</option>
+          <option value="2">Bracket 2 (Nivel Preconstruido)</option>
+          <option value="3">Bracket 3 (Preconstruido Mejorado / Mid Power)</option>
+          <option value="4">Bracket 4 (High Power / Optimizado)</option>
+          <option value="5">Bracket 5 (cEDH / Máxima eficiencia)</option>
+        </select>
+
         <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
         <textarea id="collection" name="collection" rows="8" placeholder="Sol Ring\nArcane Signet\n2x Swords to Plowshares"></textarea>
 
@@ -61,6 +71,31 @@
             </label>
           </div>
           <small>El resto (hasta 99) se llenará con cartas de "Sinergia / Flexibles".</small>
+        </fieldset>
+
+        <fieldset style="display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; margin-top: 1rem;">
+          <legend>Tipos de Carta (Límites Máximos)</legend>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <label style="display: flex; flex-direction: column;">Criaturas
+              <input type="number" name="creature" value="30" min="0" max="60" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Artefactos
+              <input type="number" name="artifact" value="15" min="0" max="60" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Encantamientos
+              <input type="number" name="enchantment" value="15" min="0" max="60" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Instantáneos
+              <input type="number" name="instant" value="15" min="0" max="60" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Conjuros
+              <input type="number" name="sorcery" value="15" min="0" max="60" style="width: 80px;" />
+            </label>
+            <label style="display: flex; flex-direction: column;">Planeswalkers
+              <input type="number" name="planeswalker" value="5" min="0" max="20" style="width: 80px;" />
+            </label>
+          </div>
+          <small>El algoritmo saltará cartas de un tipo si se supera el límite establecido aquí para mantener la variedad (Excepto tierras o rellenar huecos si faltaran cartas al final).</small>
         </fieldset>
 
         <label for="budget">Presupuesto Máximo ($) para cartas faltantes (0 = Sin límite)</label>

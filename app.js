@@ -45,31 +45,82 @@ async function fetchCommander(commanderName) {
   return data;
 }
 
-async function fetchCandidates(colorIdentity) {
+async function fetchCandidates(colorIdentity, theme, edhrecNames = []) {
   const identity = colorIdentity.length ? colorIdentity.join('') : 'c';
+  const allCards = [];
+
+  // 1. Obtener las cartas exactas que EDHREC recomienda (si existen)
+  if (edhrecNames.length > 0) {
+    const chunkSize = 75;
+    for (let i = 0; i < edhrecNames.length; i += chunkSize) {
+      const chunk = edhrecNames.slice(i, i + chunkSize);
+      const identifiers = chunk.map(name => ({ name }));
+      try {
+        const response = await fetch(`${SCRYFALL_BASE}/cards/collection`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifiers })
+        });
+        const data = await response.json();
+        if (data.data) {
+          allCards.push(...data.data.filter((card) => card.layout !== 'art_series'));
+        }
+      } catch (e) {
+        console.warn("Falla al obtener colección de Scryfall", e);
+      }
+      await new Promise(r => setTimeout(r, 60));
+    }
+  }
+
+  // Traducción de la temática a un término de búsqueda para enriquecer la piscina de Scryfall
+  let themeQuery = '';
+  switch (theme) {
+    case 'voltron': themeQuery = ' (t:equipment OR t:aura)'; break;
+    case 'tokens': themeQuery = ' (o:token OR o:create)'; break;
+    case 'lifegain': themeQuery = ' (o:"gain life" OR o:"lifelink")'; break;
+    case 'aristocrats': themeQuery = ' (o:sacrifice OR o:"dies")'; break;
+    case 'graveyard': themeQuery = ' (o:"from your graveyard" OR o:mill OR o:reanimate OR o:dredge)'; break;
+    case 'artifacts': themeQuery = ' t:artifact'; break;
+    case 'storm': themeQuery = ' (o:"instant or sorcery" OR o:magecraft)'; break;
+    case 'burn': themeQuery = ' (o:"damage to any" OR o:"damage to target" OR o:"damage to each")'; break;
+    case 'aggro': themeQuery = ' (o:haste OR o:trample OR o:menace)'; break;
+    default: themeQuery = '';
+  }
+
+  // 2. Traer cartas populares del formato (staples genéricas) para asegurar que haya Removal, Wipes, Ramp, etc.
+  // Añadimos una búsqueda secundaria genérica sin filtrar por 'theme' para evitar quedarnos sin cosas básicas
   const query = `format:commander game:paper unique:cards -type:basic identity<=${identity}`;
   let url = `${SCRYFALL_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&dir=asc`;
 
-  const allCards = [];
-  
-  // Scryfall pagina sus resultados a 175 cartas. Iteraremos 3 veces para recolectar ~525 cartas.
-  // Con esto aseguramos de tener una piscina inmensa descartando problemas de "No encuentra suficientes".
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     if (!url) break;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (allCards.length > 0) break; // Si ya teníamos algo, no rompas, devuélvelo
-      throw new Error(data?.details || 'No se pudieron obtener sugerencias desde Scryfall.');
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) break;
+      const newCards = data.data.filter((c) => c.layout !== 'art_series' && !allCards.some(existing => existing.name === c.name));
+      allCards.push(...newCards);
+      url = data.has_more ? data.next_page : null;
+      if (url) await new Promise(r => setTimeout(r, 60));
+    } catch (e) {
+      break;
     }
+  }
 
-    allCards.push(...data.data.filter((card) => card.layout !== 'art_series'));
-    url = data.has_more ? data.next_page : null;
-    
-    // Scryfall pide en sus docs 50-100ms de retraso entre páginas
-    if (url) await new Promise(r => setTimeout(r, 60));
+  // 3. Traer un lote extra ESPECÍFICO del arquetipo para asegurar densidad de esa estrategia (si eligió temática)
+  if (themeQuery) {
+    const tQuery = `${query}${themeQuery}`;
+    let tUrl = `${SCRYFALL_BASE}/cards/search?q=${encodeURIComponent(tQuery)}&order=edhrec&dir=asc`;
+    try {
+      const response = await fetch(tUrl);
+      const data = await response.json();
+      if (response.ok && data.data) {
+        const themeCards = data.data.filter((c) => c.layout !== 'art_series' && !allCards.some(existing => existing.name === c.name));
+        allCards.push(...themeCards);
+      }
+    } catch (e) {
+      // ignorar si no hay más
+    }
   }
 
   return allCards;
@@ -232,7 +283,8 @@ function renderRecommendations(recommendations, collectionCounts, scoringContext
 function attemptBuildDeck(orderedCards, plantillas, collectionCounts, maxPriceLimit) {
   const deckFinal = [];
   const rolesActivos = { land: 0, ramp: 0, draw: 0, wipe: 0, removal: 0, tutor: 0, protection: 0, recursion: 0, flex: 0 };
-  
+  const tiposActivos = { creature: 0, artifact: 0, enchantment: 0, instant: 0, sorcery: 0, planeswalker: 0 };
+
   // Total de cartas forzadas 
   const asignadasExplicitas = plantillas.land + plantillas.ramp + plantillas.draw + plantillas.wipe + plantillas.removal + plantillas.tutor + plantillas.protection + plantillas.recursion;
   plantillas.flex = Math.max(0, 99 - asignadasExplicitas);
@@ -250,19 +302,24 @@ function attemptBuildDeck(orderedCards, plantillas, collectionCounts, maxPriceLi
 
     // Control de límite de presupuesto y distribución equilibrada (anti-monopolio)
     if (plantillas.maxBudget > 0) {
-      // 1. Que no sobrepase el total
-      if ((costTotalComprar + addedCost) > plantillas.maxBudget) {
-        continue;
-      }
-      
-      // 2. Que no acapare excesivo presupuesto (usar el límite dictado por el intento actual)
-      if (addedCost > maxPriceLimit) {
-        continue; 
-      }
+      if ((costTotalComprar + addedCost) > plantillas.maxBudget) continue;
+      if (addedCost > maxPriceLimit) continue; 
     }
 
     const tags = getCardTags(card);
     let assigned = false;
+
+    // Identificación del tipo de carta principal (para imponer los límites)
+    let mainType = null;
+    const typeLine = (card.type_line || "").toLowerCase();
+    if (!typeLine.includes("land")) {
+      if (typeLine.includes("creature")) mainType = "creature";
+      else if (typeLine.includes("artifact")) mainType = "artifact";
+      else if (typeLine.includes("enchantment")) mainType = "enchantment";
+      else if (typeLine.includes("instant")) mainType = "instant";
+      else if (typeLine.includes("sorcery")) mainType = "sorcery";
+      else if (typeLine.includes("planeswalker")) mainType = "planeswalker";
+    }
 
     // Tierras
     if (tags.includes('land')) {
@@ -275,30 +332,61 @@ function attemptBuildDeck(orderedCards, plantillas, collectionCounts, maxPriceLi
       continue;
     }
 
-    // Funcionales
+    // Comprobamos si hemos sobrepasado el Límite de Tipo de esta carta (Ej: Si ya tenemos 15 Artefactos, no metemos más)
+    let assignedRole = null;
+    
+    // 1. Verificamos si la carta puede cumplir alguna función necesaria (wipes, tutor, etc)
     for (const d of ['wipe', 'removal', 'draw', 'ramp', 'tutor', 'protection', 'recursion']) {
       if (tags.includes(d) && rolesActivos[d] < plantillas[d]) {
-        rolesActivos[d]++;
-        card._assignedRole = d;
-        deckFinal.push(card);
-        assigned = true;
+        assignedRole = d;
         break;
       }
     }
 
-    // Flexibles
-    if (!assigned && rolesActivos.flex < plantillas.flex) {
-      rolesActivos.flex++;
-      card._assignedRole = "flex synergy";
-      deckFinal.push(card);
-      assigned = true;
+    // 2. Si no, evaluamos si puede entrar de relleno "flexible" en el mazo principal
+    if (!assignedRole && rolesActivos.flex < plantillas.flex) {
+      assignedRole = "flex synergy";
+    }
+
+    // Si la carta no cabe ni funcionalmente ni en el relleno, la ignoramos
+    if (!assignedRole) continue;
+
+    // 3. Comprobamos límites de Tipo de Carta (Ej: Máximo 15 Artefactos)
+    if (mainType && tiposActivos[mainType] >= plantillas[mainType]) {
+      // Si el cupo está lleno, pero nuestra nueva carta es FUNCIONAL (no flex), 
+      // buscamos en el mazo el artefacto/criatura "flex" que hayamos metido antes con MENOR score natural y lo EXPULSAMOS.
+      if (assignedRole !== "flex synergy") {
+        let replaced = false;
+        // Recorremos el deck desde el final hacía atrás (los del final tienen menor score por la ordenación)
+        for (let i = deckFinal.length - 1; i >= 0; i--) {
+          if (deckFinal[i]._mainType === mainType && deckFinal[i]._assignedRole === "flex synergy") {
+            const removedCard = deckFinal.splice(i, 1)[0];
+            const removedCost = collectionCounts.has(normalizeCardName(removedCard.name)) ? 0 : parseFloat(removedCard.prices?.usd || 0);
+            costTotalComprar -= removedCost;
+            cmcSum -= removedCard.cmc || 0;
+            nonLandCount--;
+            tiposActivos[mainType]--;
+            rolesActivos.flex--; // Liberamos un hueco flex para el futuro
+            replaced = true;
+            break;
+          }
+        }
+        if (!replaced) continue; // No había cartas de relleno para expulsar, el cupo genérico está estricto.
+      } else {
+        continue; // La carta es sólo flex y su cupo de tipo está lleno. Fuera.
+      }
     }
     
-    if (assigned) {
-      costTotalComprar += addedCost;
-      cmcSum += card.cmc || 0;
-      nonLandCount++;
-    }
+    // Si pasamos todas las barreras, registramos e insertamos la carta elegida
+    rolesActivos[assignedRole === "flex synergy" ? "flex" : assignedRole]++;
+    card._assignedRole = assignedRole;
+    card._mainType = mainType;
+    deckFinal.push(card);
+    
+    costTotalComprar += addedCost;
+    cmcSum += card.cmc || 0;
+    nonLandCount++;
+    if (mainType) tiposActivos[mainType]++;
   }
 
   // 1. Relleno de emergencia para Tierras:
@@ -423,27 +511,35 @@ async function handleSubmit(event) {
       tutor: parseInt(form.tutor.value) || 2,
       recursion: parseInt(form.recursion.value) || 3,
       protection: parseInt(form.protection.value) || 5,
-      maxBudget: parseFloat(form.budget.value) || 0
+      maxBudget: parseFloat(form.budget.value) || 0,
+      creature: parseInt(form.creature.value) || 30,
+      artifact: parseInt(form.artifact.value) || 15,
+      enchantment: parseInt(form.enchantment.value) || 15,
+      instant: parseInt(form.instant.value) || 15,
+      sorcery: parseInt(form.sorcery.value) || 15,
+      planeswalker: parseInt(form.planeswalker.value) || 5
     };
 
-    // 2. Traemos todos los posibles candidatos válidos de Scryfall
-    const candidates = await fetchCandidates(commander.color_identity || []);
-    const withoutCommander = candidates.filter((card) => card.name !== commander.name);
-    
-    // 3. Consultamos la API oculta de EDHREC
-    const edhrecData = await fetchEdhrecData(commander.name);
-    
-    // Obtenemos el Arquetipo / Estrategia del dropdown
+    // Obtenemos el Arquetipo / Estrategia y el Bracket del dropdown
     const theme = form.theme.value;
+    const bracket = form.bracket.value;
+
+    // 2. Consultamos la API local de EDHREC para extraer los nombres clave
+    const edhrecData = await fetchEdhrecData(commander.name);
+    let edhrecNames = [];
 
     let commanderSynergyMap = new Map();
     let cooccurrenceMap = new Map();
 
     if (edhrecData && edhrecData.cardlist) {
-      // Usamos las funciones de scoring.js con la cardlist de EDHREC
+      edhrecNames = edhrecData.cardlist.map(c => c.name).filter(Boolean);
       commanderSynergyMap = buildCommanderSynergyMap(edhrecData.cardlist);
       cooccurrenceMap = buildCooccurrenceMap(edhrecData.cardlist);
     }
+
+    // 3. Traemos todos los candidatos de Scryfall (EDHREC + Genéricas + Temáticas)
+    const candidates = await fetchCandidates(commander.color_identity || [], theme, edhrecNames);
+    const withoutCommander = candidates.filter((card) => card.name !== commander.name);
 
     // Calculamos sinergia estática basándonos en el comandante como "cartas seleccionadas" iniciales
     const deckSynergyMap = computeDeckSynergyMap(withoutCommander, [commander]);
@@ -452,7 +548,8 @@ async function handleSubmit(event) {
       commanderSynergyMap,
       deckSynergyMap,
       cooccurrenceMap,
-      theme
+      theme,
+      bracket
     };
 
     const ordered = sortByScore({

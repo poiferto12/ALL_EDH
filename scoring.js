@@ -4,11 +4,11 @@
 
 export const defaultWeights = {
 owned: 50,
-themeMatch: 60,  // Gran bonificación extra por encajar con el Arquetipo
-commanderSynergy: 40,
-deckSynergy: 25,
-cooccurrence: 20,
-popularity: 15
+commanderSynergy: 100,  // PESO MÁXIMO: Sinergia cruda de EDHREC
+cooccurrence: 80,       // PESO MÁXIMO: Popularidad en EDHREC
+popularity: 40,         // Datos de Scryfall (EDHREC Rank Global)
+themeMatch: 15,         // Ligero empujón si hemos elegido un Arquetipo
+deckSynergy: 0          // Desactivamos la sinergia artificial por texto
 };
 
 // ---------- THEMES / ARQUETIPOS ----------
@@ -44,17 +44,18 @@ export function getCardTags(card) {
     return tags; // Las tierras son su propio universo, paramos acá.
   }
 
-  // Ramp
+  // Ramp (Ignoramos tesoros u otros recursos si especifican que se los da al jugador objetivo o rival)
   if (
-    text.match(/\b(add \{|search your library for a.*land|create.*treasure)\b/) ||
-    text.match(/\b(enchant land).*(produce).*(mana)\b/)
+    (text.match(/\b(add \{|search your library for a.*land|create.*treasure)\b/) || text.match(/\b(enchant land).*(produce).*(mana)\b/)) &&
+    !text.match(/\b(its controller creates|that player creates|opponent creates|opponents create)\b/)
   ) {
     tags.push("ramp");
   }
 
-  // Draw (Robo y exilio para jugar)
+  // Draw (Robo y exilio para jugar, evitando robar al oponente en removal)
   if (
-    (text.match(/\b(draw(s)? \w* ?card|exile the top.*play|look at the top.*put.*into your hand)\b/) && !text.includes("return target"))
+    (text.match(/\b(draw(s)? \w* ?card|exile the top.*play|look at the top.*put.*into your hand)\b/) && !text.includes("return target")) &&
+    !text.match(/\b(its controller draws|that player draws|opponent draws|opponents draw)\b/)
   ) {
     tags.push("draw");
   }
@@ -64,7 +65,7 @@ export function getCardTags(card) {
     tags.push("wipe");
   }
   // Removal (Destruir permanent/creature localmente, rebotar)
-  else if (text.match(/\b(destroy target|exile target|return target.*hand|deals damage to target)\b/)) {
+  else if (text.match(/\b(destroy target|exile target|return target.*hand|deals damage to target)\b/) && !text.match(/target.*you control/)) {
     tags.push("removal");
   }
 
@@ -73,8 +74,8 @@ export function getCardTags(card) {
     tags.push("tutor");
   }
 
-  // Protección / Counterspells
-  if (text.match(/\b(hexproof|indestructible|protection from|counter target spell|prevent all combat damage)\b/)) {
+  // Protección / Counterspells (ahora atrapa "counter target noncreature spell")
+  if (text.match(/\b(hexproof|indestructible|protection from|counter target.*spell|prevent all combat damage)\b/)) {
     tags.push("protection");
   }
 
@@ -154,26 +155,58 @@ const keywordSynergies = [
 export function computeDeckSynergyMap(candidates, selectedCards) {
     const map = new Map();
 
+    // Helper para extraer tribus clave (Goblins, Elves, Zombies...)
+    const getTribes = (typeLine = "") => {
+        // Scryfall suele usar el em-dash "—" pero por si acaso dividimos por "-" o "—"
+        const parts = typeLine.split(/—|-/);
+        if (parts.length > 1) {
+             return parts[1].trim().toLowerCase().split(/\s+/)
+             .filter(t => t && !["human", "legendary", "creature", "artifact", "basic", "snow", "land"].includes(t));
+        }
+        return [];
+    };
+
     for (const card of candidates) {
         let synergy = 0;
+        
+        const cardText = card.oracle_text?.toLowerCase() ?? "";
+        const cardTypes = getTribes(card.type_line);
 
         for (const selected of selectedCards) {
-        if (card.type_line === selected.type_line) {
-            synergy += 0.05;
-        }
+            const selectedText = selected.oracle_text?.toLowerCase() ?? "";
+            const selectedTypes = getTribes(selected.type_line);
 
-        const cardText = card.oracle_text?.toLowerCase() ?? "";
-        const selectedText = selected.oracle_text?.toLowerCase() ?? "";
+            // 1. Sinergia Tribal Inteligente (Diferencia "Goblins" de "Warriors")
+            for (const tribe of selectedTypes) {
+                // Chequear si el comandante menciona explícitamente esta tribu en su caja de texto (es su "Clase Principal")
+                // Ej: Krenko menciona "Goblin". No menciona "Warrior". Por tanto, Goblin será Primaria, Warrior secundaria.
+                const isPrimaryTribe = selectedText.match(new RegExp(`\\b${tribe}s?\\b`, 'i'));
+                const multiplier = isPrimaryTribe ? 2.5 : 0.05; // Salto gigantesco si es tribu primaria
 
-        // Evaluamos sinergias cruzando las palabras clave
-        for (const group of keywordSynergies) {
-            const cardMatch = group.keys.some(k => cardText.includes(k));
-            const selectedMatch = group.keys.some(k => selectedText.includes(k));
-            
-            if (cardMatch && selectedMatch) {
-                synergy += group.value;
+                if (cardTypes.includes(tribe)) synergy += multiplier; 
+                if (cardText.match(new RegExp(`\\b${tribe}s?\\b`, 'i'))) synergy += (multiplier * 0.8);
             }
-        }
+            
+            // Y extra: Si la carta es de un tipo que el Comandante menciona explícitamente pero no comparte con él (Ej: crea Tokens de otro tipo)
+            for (const tribe of cardTypes) {
+                if (!selectedTypes.includes(tribe) && selectedText.match(new RegExp(`\\b${tribe}s?\\b`, 'i'))) {
+                    synergy += 2.0;
+                }
+            }
+
+            if (card.type_line === selected.type_line) {
+                synergy += 0.05;
+            }
+
+            // 2. Evaluamos sinergias cruzando las palabras clave
+            for (const group of keywordSynergies) {
+                const cardMatch = group.keys.some(k => cardText.includes(k));
+                const selectedMatch = group.keys.some(k => selectedText.includes(k));
+                
+                if (cardMatch && selectedMatch) {
+                    synergy += group.value;
+                }
+            }
         }
 
         map.set(normalizeCardName(card.name), synergy);
@@ -192,7 +225,7 @@ function computePopularityScore(rank) {
 
 // ---------- SCORE PRINCIPAL ----------
 
-export function computeCardScore({card, collectionCounts, commanderSynergyMap, deckSynergyMap, cooccurrenceMap, theme, weights = defaultWeights}) {
+export function computeCardScore({card, collectionCounts, commanderSynergyMap, deckSynergyMap, cooccurrenceMap, theme, bracket, weights = defaultWeights}) {
     const name = normalizeCardName(card.name);
     let score = 0;
 
@@ -209,6 +242,40 @@ export function computeCardScore({card, collectionCounts, commanderSynergyMap, d
        if (text.match(themePatterns[theme]) || typeMatch.match(themePatterns[theme])) {
          score += weights.themeMatch;
        }
+    }
+
+    // Modificadores por Nivel de Poder (Bracket)
+    if (bracket && bracket !== "any") {
+        const cmc = card.cmc || 0;
+        const tags = getCardTags(card);
+        
+        if (bracket === "1") {
+            // Bracket 1 (Jank/Casual): Cero tutores, cero fast mana, premia coste alto.
+            if (cmc >= 6) score += 20;
+            if (tags.includes("tutor")) score -= 50;
+            if (tags.includes("ramp") && cmc <= 1) score -= 50;
+        } else if (bracket === "2") {
+            // Bracket 2 (Preconstruido): Curva media-alta, poquísima tutorización y sin artefactos rotos de coste 0.
+            if (cmc >= 5) score += 10;
+            if (tags.includes("tutor")) score -= 30;
+            if (tags.includes("ramp") && cmc === 0 && name !== "solring") score -= 40; // Elimina Mana Crypt etc.
+        } else if (bracket === "3") {
+            // Bracket 3 (Mejorado): Empieza a buscar algo de sinergia, castiga el maná rápido excesivo pero permite herramientas sólidas.
+            if (tags.includes("tutor")) score -= 10;
+            if (cmc >= 6) score += 5; 
+            if (tags.includes("ramp") && cmc === 0 && name !== "solring") score -= 20; 
+        } else if (bracket === "4") {
+            // Bracket 4 (High Power): Optimizado. Costes eficientes, counters, tutores habituales. No quiere bichos caros aburridos.
+            if (cmc <= 3) score += 15;
+            if (tags.includes("tutor") || tags.includes("protection")) score += 15;
+            if (cmc >= 6) score -= 15;
+        } else if (bracket === "5") {
+            // Bracket 5 (cEDH): Maná ultrarrápido, tutores obligatorios, curva bajísima, todo al mínimo CMC.
+            if (cmc <= 2) score += 30;
+            if (cmc >= 5) score -= 40;
+            if (tags.includes("tutor") || tags.includes("protection")) score += 30;
+            if (tags.includes("ramp") && cmc <= 1) score += 50; 
+        }
     }
 
     // Sinergia con comandante
@@ -239,6 +306,7 @@ commanderSynergyMap,
 deckSynergyMap,
 cooccurrenceMap,
 theme,
+bracket,
 weights = defaultWeights
 }) {
 return [...cards].sort((a, b) => {
@@ -249,6 +317,7 @@ return [...cards].sort((a, b) => {
     deckSynergyMap,
     cooccurrenceMap,
     theme,
+    bracket,
     weights
     });
 
@@ -259,6 +328,7 @@ return [...cards].sort((a, b) => {
     deckSynergyMap,
     cooccurrenceMap,
     theme,
+    bracket,
     weights
     });
 
