@@ -82,28 +82,117 @@ function createBadge(text, className) {
   return badge;
 }
 
+// Nuevo orden bonito y diccionario de textos
+const roleDisplayNames = {
+  land: "Tierras",
+  ramp: "Aceleración de Maná (Ramp)",
+  draw: "Robo de Cartas (Draw)",
+  tutor: "Tutores",
+  removal: "Destrucción / Removal",
+  wipe: "Limpiamesas (Wipes)",
+  protection: "Protección / Counters",
+  recursion: "Recursión del Cementerio",
+  "flex synergy": "Sinergia Principal (Flex)",
+  "flex fallback": "Relleno Funcional (Fallback)"
+};
+
 function renderRecommendations(recommendations, collectionCounts, scoringContext) {
-  const list = document.getElementById('recommendations');
-  list.replaceChildren();
+  const container = document.getElementById('recommendations');
+  container.replaceChildren(); // Limpia la lista
 
-  // Ahora recommendations ya viene con un atributo decorativo _assignedRole  
+  // Agrupamos las cartas por rol
+  const groups = {};
   for (const card of recommendations) {
-    const item = document.createElement('li');
-    
-    // Mostramos la puntuación final para darle feedback al usuario del por qué
-    const finalScore = computeCardScore({
-      card, 
-      collectionCounts, 
-      ...scoringContext 
-    });
-    
-    // Mostramos el Rol asignado y la Puntuación
-    const role = (card._assignedRole || "flex").toUpperCase();
-    item.textContent = `[${role}] ${card.name} (Pts: ${finalScore.toFixed(1)})`;
+    const role = card._assignedRole || "flex fallback";
+    if (!groups[role]) groups[role] = [];
+    groups[role].push(card);
+  }
 
-    const owned = collectionCounts.has(normalizeCardName(card.name));
-    item.appendChild(createBadge(owned ? 'En colección' : 'Falta', owned ? 'badge-owned' : 'badge-missing'));
-    list.appendChild(item);
+  // Iteramos sobre las categorías en el orden en el que queremos que se vean
+  for (const [roleKey, roleName] of Object.entries(roleDisplayNames)) {
+    const cardsInRole = groups[roleKey];
+    if (!cardsInRole || cardsInRole.length === 0) continue;
+
+    // Crea la caja/categoría
+    const section = document.createElement('section');
+    section.className = 'category-section';
+
+    // Crea el encabezado
+    const header = document.createElement('h3');
+    header.className = 'category-header';
+    header.textContent = roleName;
+    
+    // Cuenta de cartas
+    const countBadge = document.createElement('span');
+    countBadge.className = 'category-count';
+    countBadge.textContent = cardsInRole.length;
+    header.appendChild(countBadge);
+
+    section.appendChild(header);
+
+    // Contenedor de iteraciones de cartas
+    const list = document.createElement('ul');
+    list.className = 'card-list';
+
+    for (const card of cardsInRole) {
+      const item = document.createElement('li');
+      item.className = 'card-item';
+      item.setAttribute('data-role', roleKey); // Para darle el color CSS
+      
+      const finalScore = computeCardScore({
+        card, 
+        collectionCounts, 
+        ...scoringContext 
+      });
+
+      // 1. Imagen de la carta (soporta cartas de doble cara)
+      const imageUrl = card.image_uris?.art_crop || card.card_faces?.[0]?.image_uris?.art_crop || '';
+      if (imageUrl) {
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.className = 'card-image';
+        img.alt = `Arte de ${card.name}`;
+        img.loading = 'lazy'; // Importante para no asfixiar la red cargando 100 imágenes de golpe
+        item.appendChild(img);
+      }
+
+      // Contenedor para el texto
+      const contentRow = document.createElement('div');
+      contentRow.className = 'card-content';
+
+      // 2. Primer bloque flex (Nombre y Badge)
+      const infoRow = document.createElement('div');
+      infoRow.className = 'card-info';
+      
+      const nameEl = document.createElement('span');
+      nameEl.textContent = card.name;
+      // Estilo extra para asegurar que el nombre largo no desajuste el grid
+      nameEl.style.whiteSpace = 'nowrap';
+      nameEl.style.overflow = 'hidden';
+      nameEl.style.textOverflow = 'ellipsis';
+      nameEl.style.marginRight = '0.5rem';
+      
+      infoRow.appendChild(nameEl);
+
+      const isOwned = collectionCounts.has(normalizeCardName(card.name));
+      const badge = createBadge(isOwned ? 'En colección' : 'Falta', isOwned ? 'badge-owned' : 'badge-missing');
+      badge.style.flexShrink = '0';
+      infoRow.appendChild(badge);
+      
+      // 3. Segundo bloque numérico (Precio, cmc y puntaje)
+      const ptsRow = document.createElement('div');
+      ptsRow.className = 'card-pts';
+      ptsRow.textContent = `Pts: ${finalScore.toFixed(1)} · CMR: ${card.cmc || 0} · Precio: $${parseFloat(card.prices?.usd || 0).toFixed(2)}`;
+
+      contentRow.appendChild(infoRow);
+      contentRow.appendChild(ptsRow);
+      
+      item.appendChild(contentRow);
+      list.appendChild(item);
+    }
+    
+    section.appendChild(list);
+    container.appendChild(section);
   }
 
   return recommendations;

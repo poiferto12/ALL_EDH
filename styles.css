@@ -47,7 +47,116 @@ button {
   color: white;
 }
 
-#recommendations {
+/* --------------- NUEVOS ESTILOS PARA LA GRILLA DE CARTAS --------------- */
+
+.deck-grid {
   display: grid;
-  gap: 0.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: start;
 }
+
+.category-section {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .category-section {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.category-header {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-count {
+  font-size: 0.9rem;
+  font-weight: normal;
+  opacity: 0.8;
+  background: rgba(128, 128, 128, 0.2);
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.6rem;
+  border-radius: 6px;
+  border-left: 4px solid #748ffc;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: #5c7cfa;
+  }
+}
+
+.card-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.1);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+/* Colores de roles para el borde izquierdo */
+.card-item[data-role="land"] { border-left-color: #8ce99a; }
+.card-item[data-role="ramp"] { border-left-color: #40c057; }
+.card-item[data-role="draw"] { border-left-color: #4dabf7; }
+.card-item[data-role="tutor"] { border-left-color: #1c7ed6; }
+.card-item[data-role="removal"] { border-left-color: #fa5252; }
+.card-item[data-role="wipe"] { border-left-color: #e03131; }
+.card-item[data-role="protection"] { border-left-color: #fcc419; }
+.card-item[data-role="recursion"] { border-left-color: #cc5de8; }
+.card-item[data-role*="flex"] { border-left-color: #adb5bd; }
+
+.card-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.card-pts {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-weight: normal;
+  margin-top: 0.2rem;
+}
+
