@@ -1,10 +1,13 @@
-# ALL_EDH
+## Estado del proyecto y limitaciones
 
-Web para creación de mazos de Commander usando la API de Scryfall y priorizando la colección del usuario.
+ALL_EDH es un proyecto personal en desarrollo. El sistema utiliza reglas heurísticas para clasificar y puntuar cartas, por lo que las recomendaciones no deben considerarse mazos optimizados ni sustituir una revisión manual.
 
-## Uso rápido
+Entre las limitaciones actuales se encuentran:
 
-1. Abre `index.html` en un servidor estático (por ejemplo: `python3 -m http.server`).
-2. Escribe el nombre exacto del comandante.
-3. Pega tu colección (una carta por línea, opcional cantidad como `2x Sol Ring`).
-4. Pulsa **Generar sugerencias** para ver cartas recomendadas, priorizando primero las cartas que ya tienes.
+* Las categorías se detectan principalmente mediante el análisis del texto de las cartas.
+* La lista de combos y paquetes de sinergia es parcial.
+* Los pesos del sistema de puntuación todavía necesitan validación y ajuste.
+* La curva de maná y la distribución de fuentes de color no se evalúan completamente.
+* La calidad de los resultados puede variar considerablemente según el comandante y el arquetipo.
+
+El objetivo actual es crear casos de prueba, mejorar la explicación de las puntuaciones y comparar los resultados con mazos reales.

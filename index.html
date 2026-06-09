@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ALL_EDH - Commander Deck Builder</title>
+    <meta name="description" content="Genera mazos de Commander optimizados usando Scryfall con heurísticas avanzadas" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="container">
       <h1>ALL_EDH</h1>
-      <p>Crea sugerencias de mazos Commander con Scryfall y prioriza tu colección.</p>
+      <p>Genera mazos de Commander optimizados con heuristicas avanzadas. Prioriza tu coleccion.</p>
 
       <form id="deck-form">
         <label for="commander">Comandante</label>
@@ -27,16 +28,11 @@
           <option value="artifacts">Artefactos Completos</option>
           <option value="graveyard">Cementerio / Reanimator</option>
           <option value="aggro">Ataque Masivo (Aggro)</option>
-        </select>
-
-        <label for="bracket">Nivel de Poder (Tier/Bracket)</label>
-        <select id="bracket" name="bracket">
-          <option value="any">Cualquiera / Automático</option>
-          <option value="1">Bracket 1 (Jank / Muy Casual, sin tutores ni maná rápido)</option>
-          <option value="2">Bracket 2 (Nivel Preconstruido)</option>
-          <option value="3">Bracket 3 (Preconstruido Mejorado / Mid Power)</option>
-          <option value="4">Bracket 4 (High Power / Optimizado)</option>
-          <option value="5">Bracket 5 (cEDH / Máxima eficiencia)</option>
+          <option value="control">Control / Stax</option>
+          <option value="ramp">Ramp / Big Mana</option>
+          <option value="counters">Contadores +1/+1</option>
+          <option value="enchantress">Encantamientos (Enchantress)</option>
+          <option value="tribal">Tribal</option>
         </select>
 
         <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
@@ -73,45 +69,16 @@
           <small>El resto (hasta 99) se llenará con cartas de "Sinergia / Flexibles".</small>
         </fieldset>
 
-        <fieldset style="display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; margin-top: 1rem;">
-          <legend>Tipos de Carta (Límites Máximos)</legend>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <label style="display: flex; flex-direction: column;">Criaturas
-              <input type="number" name="creature" value="30" min="0" max="60" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Artefactos
-              <input type="number" name="artifact" value="15" min="0" max="60" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Encantamientos
-              <input type="number" name="enchantment" value="15" min="0" max="60" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Instantáneos
-              <input type="number" name="instant" value="15" min="0" max="60" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Conjuros
-              <input type="number" name="sorcery" value="15" min="0" max="60" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Planeswalkers
-              <input type="number" name="planeswalker" value="5" min="0" max="20" style="width: 80px;" />
-            </label>
-          </div>
-          <small>El algoritmo saltará cartas de un tipo si se supera el límite establecido aquí para mantener la variedad (Excepto tierras o rellenar huecos si faltaran cartas al final).</small>
-        </fieldset>
-
         <label for="budget">Presupuesto Máximo ($) para cartas faltantes (0 = Sin límite)</label>
         <input id="budget" name="budget" type="number" value="0" min="0" step="1" />
 
-        <button type="submit">Generar sugerencias</button>
+        <button type="submit" id="submit-btn">Generar Mazo</button>
       </form>
 
       <section id="status" aria-live="polite"></section>
       <section id="summary"></section>
-      <div id="recommendations" class="deck-grid"></div>
+      <ol id="recommendations"></ol>
     </main>
-
-    <div id="card-tooltip" style="display: none; position: fixed; z-index: 1000; pointer-events: none;">
-      <img id="tooltip-img" src="" alt="Carta completa" style="width: 250px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.6);" />
-    </div>
 
     <script type="module" src="app.js"></script>
   </body>
