@@ -2,83 +2,207 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ALL_EDH - Commander Deck Builder</title>
-    <meta name="description" content="Genera mazos de Commander optimizados usando Scryfall con heurísticas avanzadas" />
-    <script type="module" crossorigin src="/assets/index-BnIV50jR.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dm6NMX0T.css">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>ALL EDH</title>
+    <script type="module" crossorigin src="/assets/index-BzYBiRSM.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CBnCh2Zy.css">
   </head>
+
   <body>
-    <main class="container">
-      <h1>ALL_EDH</h1>
-      <p>Genera mazos de Commander optimizados con heuristicas avanzadas. Prioriza tu coleccion.</p>
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Commander deck builder</p>
+          <h1>ALL EDH</h1>
+          <p class="subtitle">
+            Genera una lista de Commander priorizando tu colección,
+            tu presupuesto y la coherencia global del mazo.
+          </p>
+        </div>
+      </section>
 
-      <form id="deck-form">
-        <label for="commander">Comandante</label>
-        <input id="commander" name="commander" type="text" placeholder="Atraxa, Praetors' Voice" required />
+      <section class="panel">
+        <form id="deck-form" class="form-grid">
+          <label class="field field-wide">
+            <span>Comandante</span>
+            <input
+              name="commander"
+              type="text"
+              placeholder="Ej. Muldrotha, the Gravetide"
+              autocomplete="off"
+              required
+            />
+          </label>
 
-        <label for="theme">Estrategia / Arquetipo principal</label>
-        <select id="theme" name="theme">
-          <option value="none">Sinergia General (Automático)</option>
-          <option value="voltron">Voltron (Auras/Equipos)</option>
-          <option value="lifegain">Ganancia de Vidas (Lifegain)</option>
-          <option value="tokens">Criaturas Ficha (Tokens)</option>
-          <option value="aristocrats">Sacrificio (Aristocrats)</option>
-          <option value="burn">Daño Directo (Burn)</option>
-          <option value="storm">Spellslinger / Storm (Hechizos)</option>
-          <option value="artifacts">Artefactos Completos</option>
-          <option value="graveyard">Cementerio / Reanimator</option>
-          <option value="aggro">Ataque Masivo (Aggro)</option>
-          <option value="control">Control / Stax</option>
-          <option value="ramp">Ramp / Big Mana</option>
-          <option value="counters">Contadores +1/+1</option>
-          <option value="enchantress">Encantamientos (Enchantress)</option>
-          <option value="tribal">Tribal</option>
-        </select>
+          <label class="field">
+            <span>Tema</span>
+            <select name="theme">
+              <option value="none">Automático / ninguno</option>
+              <option value="tokens">Tokens</option>
+              <option value="aristocrats">Aristocrats</option>
+              <option value="graveyard">Cementerio</option>
+              <option value="storm">Spellslinger / Storm</option>
+              <option value="voltron">Voltron</option>
+              <option value="lifegain">Lifegain</option>
+              <option value="artifacts">Artefactos</option>
+              <option value="counters">Contadores</option>
+              <option value="tribal">Tribal</option>
+              <option value="control">Control</option>
+              <option value="aggro">Aggro</option>
+              <option value="ramp">Ramp</option>
+              <option value="enchantress">Enchantress</option>
+            </select>
+          </label>
 
-        <label for="collection">Tu colección (una carta por línea, opcional cantidad con "2x Nombre")</label>
-        <textarea id="collection" name="collection" rows="8" placeholder="Sol Ring\nArcane Signet\n2x Swords to Plowshares"></textarea>
+          <label class="field">
+            <span>Presupuesto máximo USD</span>
+            <input
+              name="budget"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0 = sin límite"
+              value="0"
+            />
+          </label>
 
-        <fieldset style="display: grid; gap: 0.5rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px;">
-          <legend>Plantilla del Mazo (99 cartas en total)</legend>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <label style="display: flex; flex-direction: column;">Tierras
-              <input type="number" name="lands" value="36" min="0" max="50" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Ramp
-              <input type="number" name="ramp" value="10" min="0" max="30" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Robo (Draw)
-              <input type="number" name="draw" value="10" min="0" max="30" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Removal
-              <input type="number" name="removal" value="8" min="0" max="30" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Limpiamesas (Wipes)
-              <input type="number" name="wipe" value="3" min="0" max="10" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Tutores
-              <input type="number" name="tutor" value="2" min="0" max="10" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Protección
-              <input type="number" name="protection" value="5" min="0" max="15" style="width: 80px;" />
-            </label>
-            <label style="display: flex; flex-direction: column;">Recursión
-              <input type="number" name="recursion" value="3" min="0" max="15" style="width: 80px;" />
-            </label>
+          <label class="field">
+            <span>Tierras</span>
+            <input
+              name="lands"
+              type="number"
+              min="28"
+              max="45"
+              value="38"
+            />
+          </label>
+
+          <label class="field">
+            <span>Ramp</span>
+            <input
+              name="ramp"
+              type="number"
+              min="0"
+              max="25"
+              value="10"
+            />
+          </label>
+
+          <label class="field">
+            <span>Robo</span>
+            <input
+              name="draw"
+              type="number"
+              min="0"
+              max="25"
+              value="10"
+            />
+          </label>
+
+          <label class="field">
+            <span>Removal</span>
+            <input
+              name="removal"
+              type="number"
+              min="0"
+              max="25"
+              value="8"
+            />
+          </label>
+
+          <label class="field">
+            <span>Wipes</span>
+            <input
+              name="wipe"
+              type="number"
+              min="0"
+              max="12"
+              value="3"
+            />
+          </label>
+
+          <label class="field">
+            <span>Tutores</span>
+            <input
+              name="tutor"
+              type="number"
+              min="0"
+              max="15"
+              value="2"
+            />
+          </label>
+
+          <label class="field">
+            <span>Recursión</span>
+            <input
+              name="recursion"
+              type="number"
+              min="0"
+              max="15"
+              value="3"
+            />
+          </label>
+
+          <label class="field">
+            <span>Protección</span>
+            <input
+              name="protection"
+              type="number"
+              min="0"
+              max="15"
+              value="5"
+            />
+          </label>
+
+          <label class="field field-wide">
+            <span>Colección</span>
+            <textarea
+              name="collection"
+              rows="9"
+              placeholder="Pega aquí tu colección. Ej:
+Sol Ring
+2 Arcane Signet
+3x Swords to Plowshares"
+            ></textarea>
+          </label>
+
+          <div class="actions field-wide">
+            <button id="submit-btn" type="submit">
+              Generar Mazo
+            </button>
+
+            <button
+              id="export-btn"
+              type="button"
+              class="secondary-button"
+              hidden
+            >
+              Exportar lista (.txt)
+            </button>
           </div>
-          <small>El resto (hasta 99) se llenará con cartas de "Sinergia / Flexibles".</small>
-        </fieldset>
+        </form>
+      </section>
 
-        <label for="budget">Presupuesto Máximo ($) para cartas faltantes (0 = Sin límite)</label>
-        <input id="budget" name="budget" type="number" value="0" min="0" step="1" />
+      <section class="panel results-panel">
+        <div class="results-header">
+          <div>
+            <h2>Resultado</h2>
+            <p id="status" class="status">
+              Indica un comandante para empezar.
+            </p>
+          </div>
 
-        <button type="submit" id="submit-btn">Generar Mazo</button>
-      </form>
+          <p id="summary" class="summary"></p>
+        </div>
 
-      <section id="status" aria-live="polite"></section>
-      <section id="summary"></section>
-      <ol id="recommendations"></ol>
+        <ul
+          id="recommendations"
+          class="recommendations"
+        ></ul>
+      </section>
     </main>
 
   </body>

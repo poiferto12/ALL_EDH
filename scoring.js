@@ -2,287 +2,287 @@
 
 // ---------- UTIL ----------
 export function normalizeCardName(name) {
-  return (name || '')
+  return name
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+    .replace(/[^a-z0-9]/g, "");
 }
 
 // ---------- TIPOS DE CRIATURA ----------
 const CREATURE_TYPES = new Set([
-  'angel',
-  'demon',
-  'dragon',
-  'zombie',
-  'vampire',
-  'elf',
-  'goblin',
-  'merfolk',
-  'ally',
-  'wizard',
-  'warrior',
-  'knight',
-  'cleric',
-  'rogue',
-  'shaman',
-  'druid',
-  'monk',
-  'beast',
-  'bird',
-  'cat',
-  'dinosaur',
-  'elemental',
-  'faerie',
-  'giant',
-  'golem',
-  'human',
-  'hydra',
-  'insect',
-  'minotaur',
-  'phoenix',
-  'pirate',
-  'plant',
-  'rat',
-  'saproling',
-  'serpent',
-  'skeleton',
-  'sliver',
-  'soldier',
-  'sphinx',
-  'spirit',
-  'treefolk',
-  'wolf',
-  'wurm',
-  'construct',
-  'horror',
-  'illusion',
-  'kithkin',
-  'leviathan',
-  'ooze',
-  'pegasus',
-  'praetor',
-  'shade',
-  'shapeshifter',
-  'spawn',
-  'specter',
-  'thrull',
-  'troll',
-  'unicorn',
-  'archer',
-  'assassin',
-  'berserker',
-  'centaur',
-  'djinn',
-  'dryad',
-  'fungus',
-  'gorgon',
-  'homunculus',
-  'imp',
-  'kavu',
-  'lizard',
-  'ninja',
-  'ogre',
-  'orc',
-  'scorpion',
-  'spider',
-  'squid',
-  'turtle',
-  'naga',
-  'viashino',
-  'vedalken',
-  'gnome',
-  'mutant',
-  'avatar'
+  "angel",
+  "demon",
+  "dragon",
+  "zombie",
+  "vampire",
+  "elf",
+  "goblin",
+  "merfolk",
+  "ally",
+  "wizard",
+  "warrior",
+  "knight",
+  "cleric",
+  "rogue",
+  "shaman",
+  "druid",
+  "monk",
+  "beast",
+  "bird",
+  "cat",
+  "dinosaur",
+  "elemental",
+  "faerie",
+  "giant",
+  "golem",
+  "human",
+  "hydra",
+  "insect",
+  "minotaur",
+  "phoenix",
+  "pirate",
+  "plant",
+  "rat",
+  "saproling",
+  "serpent",
+  "skeleton",
+  "sliver",
+  "soldier",
+  "sphinx",
+  "spirit",
+  "treefolk",
+  "wolf",
+  "wurm",
+  "construct",
+  "horror",
+  "illusion",
+  "kithkin",
+  "leviathan",
+  "ooze",
+  "pegasus",
+  "praetor",
+  "shade",
+  "shapeshifter",
+  "spawn",
+  "specter",
+  "thrull",
+  "troll",
+  "unicorn",
+  "archer",
+  "assassin",
+  "berserker",
+  "centaur",
+  "djinn",
+  "dryad",
+  "fungus",
+  "gorgon",
+  "homunculus",
+  "imp",
+  "kavu",
+  "lizard",
+  "ninja",
+  "ogre",
+  "orc",
+  "scorpion",
+  "spider",
+  "squid",
+  "turtle",
+  "naga",
+  "viashino",
+  "vedalken",
+  "gnome",
+  "mutant",
+  "avatar",
 ]);
 
 // ---------- MECÁNICAS ----------
 const MECHANIC_GROUPS = [
   {
     pattern: /\bally\b/i,
-    group: 'ally'
+    group: "ally",
   },
   {
     pattern: /\+1\/\+1 counter/i,
-    group: 'counters'
+    group: "counters",
   },
   {
     pattern: /proliferate/i,
-    group: 'counters'
+    group: "counters",
   },
   {
     pattern: /create.*token/i,
-    group: 'tokens'
+    group: "tokens",
   },
   {
     pattern: /populate/i,
-    group: 'tokens'
+    group: "tokens",
   },
   {
     pattern: /\bsacrifice\b/i,
-    group: 'sacrifice'
+    group: "sacrifice",
   },
   {
     pattern: /when.*dies/i,
-    group: 'sacrifice'
+    group: "sacrifice",
   },
   {
     pattern: /graveyard/i,
-    group: 'graveyard'
+    group: "graveyard",
   },
   {
     pattern: /flashback|unearth|escape/i,
-    group: 'graveyard'
+    group: "graveyard",
   },
   {
     pattern: /whenever you cast/i,
-    group: 'spells'
+    group: "spells",
   },
   {
     pattern: /magecraft/i,
-    group: 'spells'
+    group: "spells",
   },
   {
     pattern: /copy.*spell/i,
-    group: 'spells'
+    group: "spells",
   },
   {
     pattern: /when.*enters/i,
-    group: 'etb'
+    group: "etb",
   },
   {
     pattern: /flicker|blink/i,
-    group: 'blink'
+    group: "blink",
   },
   {
     pattern: /\bequip\b|equipment/i,
-    group: 'equipment'
+    group: "equipment",
   },
   {
     pattern: /enchant creature|aura/i,
-    group: 'auras'
+    group: "auras",
   },
   {
     pattern: /gain.*life|lifelink/i,
-    group: 'lifegain'
+    group: "lifegain",
   },
   {
     pattern: /whenever.*gain.*life/i,
-    group: 'lifegain'
+    group: "lifegain",
   },
   {
     pattern: /draw.*card/i,
-    group: 'draw'
+    group: "draw",
   },
   {
     pattern: /wheel.*each player draws/i,
-    group: 'wheels'
+    group: "wheels",
   },
   {
     pattern: /add \{[WUBRGC]/i,
-    group: 'ramp'
+    group: "ramp",
   },
   {
     pattern: /search.*land/i,
-    group: 'ramp'
+    group: "ramp",
   },
   {
     pattern: /\bartifact\b/i,
-    group: 'artifacts'
+    group: "artifacts",
   },
   {
     pattern: /treasure/i,
-    group: 'treasure'
+    group: "treasure",
   },
   {
     pattern: /\benchantment\b/i,
-    group: 'enchantments'
+    group: "enchantments",
   },
   {
     pattern: /constellation/i,
-    group: 'enchantments'
+    group: "enchantments",
   },
   {
     pattern: /whenever.*attacks/i,
-    group: 'attack-triggers'
+    group: "attack-triggers",
   },
   {
     pattern: /additional combat/i,
-    group: 'combat'
+    group: "combat",
   },
   {
     pattern: /landfall/i,
-    group: 'landfall'
+    group: "landfall",
   },
   {
     pattern: /\bmill\b/i,
-    group: 'mill'
+    group: "mill",
   },
   {
     pattern: /deals.*damage.*each/i,
-    group: 'ping'
+    group: "ping",
   },
   {
     pattern: /whenever.*deals damage/i,
-    group: 'ping'
-  }
+    group: "ping",
+  },
 ];
 
 // ---------- STAPLES UNIVERSALES ----------
 const UNIVERSAL_STAPLES = new Set([
-  'solring',
-  'arcanesignet',
-  'commandtower',
-  'lightninggreaves',
-  'swiftfootboots',
-  'swordstoplowshares',
-  'pathtoexile',
-  'counterspell',
-  'cyclonicrift',
-  'demonictutor',
-  'vampirictutor',
-  'rhysticstudy',
-  'smotheringtithe',
-  'docksideextortionist',
-  'fierceguardianship',
-  'deflectingswat',
-  'deadlyrollick',
-  'jeskaswill',
-  'espersentinel',
-  'manacrypt',
-  'manavault',
-  'sylvanlibrary',
-  'necropotence',
-  'cultivate',
-  'kodamasreach',
-  'farseek',
-  'natureslore',
-  'beastwithin',
-  'chaoswarp',
-  'generousgift',
-  'anguishedunmaking',
-  'toxicdeluge',
-  'blasphemousact',
-  'vandalblast',
-  'farewell'
+  "solring",
+  "arcanesignet",
+  "commandtower",
+  "lightninggreaves",
+  "swiftfootboots",
+  "swordstoplowshares",
+  "pathtoexi",
+  "counterspell",
+  "cyclonicrift",
+  "demonictutor",
+  "vampirictutor",
+  "rhysticstudy",
+  "smotheringtithe",
+  "docksideextortionist",
+  "fierceguardianship",
+  "deflectingswat",
+  "deadlyrollick",
+  "jeskaswill",
+  "espersentinel",
+  "manacrypt",
+  "manavault",
+  "sylvanlibrary",
+  "necropotence",
+  "cultivate",
+  "kodamasreach",
+  "farseek",
+  "natureslore",
+  "beastwith",
+  "chaoswarp",
+  "generousgift",
+  "anguishedunmaking",
+  "toxicdeluge",
+  "blasphemousact",
+  "vandalblast",
+  "farewell",
 ]);
 
 const BASIC_LAND_NAMES = new Set([
-  'plains',
-  'island',
-  'swamp',
-  'mountain',
-  'forest',
-  'wastes'
+  "plains",
+  "island",
+  "swamp",
+  "mountain",
+  "forest",
+  "wastes",
 ]);
 
 // ---------- ANALIZAR COMANDANTE ----------
 export function analyzeCommander(commander) {
   const text = (
-    commander.oracle_text || ''
+    commander.oracle_text || ""
   ).toLowerCase();
 
   const type = (
-    commander.type_line || ''
+    commander.type_line || ""
   ).toLowerCase();
 
   const colors =
@@ -305,14 +305,14 @@ export function analyzeCommander(commander) {
     careAboutSacrifice: false,
     careAboutETB: false,
     careAboutEquipment: false,
-    careAboutPing: false
+    careAboutPing: false,
   };
 
   const extractTribe = raw => {
     const clean = raw
       .trim()
       .toLowerCase()
-      .replace(/[^a-z'-]/g, '');
+      .replace(/[^a-z'-]/g, "");
 
     return CREATURE_TYPES.has(clean)
       ? clean
@@ -322,20 +322,21 @@ export function analyzeCommander(commander) {
   const explicitTribes = new Set();
 
   const tribePatterns = [
-    /(?:another|other|each|every|a|an)\s+([a-z'-]+)s?\s+(?:you control|you have|you cast|enters|dies|attacks|blocks|deals|triggers|is|has)/ig,
-    /\b([a-z'-]+)s?\s+you control\b/ig,
-    /\b(?:of|for|with) an?\s+([a-z'-]+)\s+you control\b/ig,
-    /\bwhenever an?\s+([a-z'-]+)s?\b/ig
+    /(?:another|other|each|every|a|an)\s+([a-z'-]+)s?\s+(?:you control|you have|you cast|enters|dies|attacks|blocks|deals|triggers|is|has)/gi,
+    /\b([a-z'-]+)s?\s+you control\b/gi,
+    /\b(?:of|for|with) an?\s+([a-z'-]+)\s+you control\b/gi,
+    /\bwhenever an?\s+([a-z'-]+)s?\b/gi,
   ];
 
   for (const pattern of tribePatterns) {
     let match;
 
     while (
-      (match = pattern.exec(text)) !== null
+      (match = pattern.exec(text)) !==
+      null
     ) {
       const tribe = extractTribe(
-        match[1] || ''
+        match[1] || ""
       );
 
       if (tribe) {
@@ -350,10 +351,12 @@ export function analyzeCommander(commander) {
     }
   } else {
     const subtypeText =
-      type.split('—')[1] || '';
+      type.split("—")[1] || "";
 
     for (
-      const part of subtypeText.split(/[, ]+/)
+      const part of subtypeText.split(
+        /[, ]+/
+      )
     ) {
       const tribe = extractTribe(part);
 
@@ -376,43 +379,53 @@ export function analyzeCommander(commander) {
     profile.tribes.size > 0;
 
   profile.careAboutSpells =
-    profile.mechanics.has('spells');
+    profile.mechanics.has("spells");
 
   profile.careAboutGraveyard =
-    profile.mechanics.has('graveyard');
+    profile.mechanics.has("graveyard");
 
   profile.careAboutTokens =
-    profile.mechanics.has('tokens');
+    profile.mechanics.has("tokens");
 
   profile.careAboutCounters =
-    profile.mechanics.has('counters');
+    profile.mechanics.has("counters");
 
   profile.careAboutArtifacts =
-    profile.mechanics.has('artifacts') ||
-    profile.mechanics.has('treasure');
+    profile.mechanics.has(
+      "artifacts"
+    ) ||
+    profile.mechanics.has(
+      "treasure"
+    );
 
   profile.careAboutEnchantments =
-    profile.mechanics.has('enchantments');
+    profile.mechanics.has(
+      "enchantments"
+    );
 
   profile.careAboutLandfall =
-    profile.mechanics.has('landfall');
+    profile.mechanics.has("landfall");
 
   profile.careAboutLifegain =
-    profile.mechanics.has('lifegain');
+    profile.mechanics.has("lifegain");
 
   profile.careAboutSacrifice =
-    profile.mechanics.has('sacrifice');
+    profile.mechanics.has(
+      "sacrifice"
+    );
 
   profile.careAboutETB =
-    profile.mechanics.has('etb') ||
-    profile.mechanics.has('blink');
+    profile.mechanics.has("etb") ||
+    profile.mechanics.has("blink");
 
   profile.careAboutEquipment =
-    profile.mechanics.has('equipment') ||
-    profile.mechanics.has('auras');
+    profile.mechanics.has(
+      "equipment"
+    ) ||
+    profile.mechanics.has("auras");
 
   profile.careAboutPing =
-    profile.mechanics.has('ping');
+    profile.mechanics.has("ping");
 
   return profile;
 }
@@ -423,11 +436,11 @@ function computeLandRelevance(
   profile
 ) {
   const text = (
-    card.oracle_text || ''
+    card.oracle_text || ""
   ).toLowerCase();
 
   const name = (
-    card.name || ''
+    card.name || ""
   )
     .toLowerCase()
     .trim();
@@ -437,31 +450,34 @@ function computeLandRelevance(
   }
 
   if (
-    /search your library for a (basic )?land/i
-      .test(text)
+    /search your library for a (basic )?land/i.test(
+      text
+    )
   ) {
     return 0.6;
   }
 
   if (
-    /command tower|exotic orchard|reflecting pool|city of brass|mana confluence/i
-      .test(name)
+    /command tower|exotic orchard|reflecting pool|city of brass|mana confluence/i.test(
+      name
+    )
   ) {
     return 0.65;
   }
 
   const colorWordMap = {
-    W: 'white',
-    U: 'blue',
-    B: 'black',
-    R: 'red',
-    G: 'green'
+    W: "white",
+    U: "blue",
+    B: "black",
+    R: "red",
+    G: "green",
   };
 
   let colorMatches = 0;
 
   for (const color of profile.colors) {
-    const word = colorWordMap[color];
+    const word =
+      colorWordMap[color];
 
     if (
       word &&
@@ -483,7 +499,9 @@ function computeLandRelevance(
     profile.colors &&
     profile.colors.length > 0
   ) {
-    if (/\{c\}|colorless/i.test(text)) {
+    if (
+      /\{c\}|colorless/i.test(text)
+    ) {
       return 0.02;
     }
 
@@ -492,7 +510,9 @@ function computeLandRelevance(
     }
   }
 
-  if (/\{c\}|colorless/i.test(text)) {
+  if (
+    /\{c\}|colorless/i.test(text)
+  ) {
     return 0.1;
   }
 
@@ -502,74 +522,116 @@ function computeLandRelevance(
 // ---------- TEMAS ----------
 const themePatterns = {
   voltron: {
-    core: /\b(equip|enchant creature|aura|attached|equipped creature gets|enchanted creature)/i,
-    support: /\b(double strike|hexproof|indestructible|protection from)/i
+    core:
+      /\b(equip|enchant creature|aura|attached|equipped creature gets|enchanted creature)/i,
+
+    support:
+      /\b(double strike|hexproof|indestructible|protection from)/i,
   },
 
   lifegain: {
-    core: /\b(gain(s)? life|lifelink|whenever you gain life|life total)/i,
-    support: /\b(angel|cleric|life.*greater)/i
+    core:
+      /\b(gain(s)? life|lifelink|whenever you gain life|life total)/i,
+
+    support:
+      /\b(angel|cleric|life.*greater)/i,
   },
 
   tokens: {
-    core: /\b(create(s)?.*token|populate|token(s)? (you control|creature))/i,
-    support: /\b(doubling season|parallel lives|anointed procession|convoke)/i
+    core:
+      /\b(create(s)?.*token|populate|token(s)? (you control|creature))/i,
+
+    support:
+      /\b(doubling season|parallel lives|anointed procession|convoke)/i,
   },
 
   aristocrats: {
-    core: /\b(sacrifice(s)?|when(ever)?.*dies)/i,
-    support: /\b(drain|fodder|persist|undying|grave pact)/i
+    core:
+      /\b(sacrifice(s)?|when(ever)?.*dies)/i,
+
+    support:
+      /\b(drain|fodder|persist|undying|grave pact)/i,
   },
 
   burn: {
-    core: /\b(deal(s)?.*damage to (target|each|any))/i,
-    support: /\b(guttersnipe|firebrand|goblin)/i
+    core:
+      /\b(deal(s)?.*damage to (target|each|any))/i,
+
+    support:
+      /\b(guttersnipe|firebrand|goblin)/i,
   },
 
   storm: {
-    core: /\b(instant(s)? (or|and) sorceries?|copy target spell|storm|magecraft)/i,
-    support: /\b(cost.*less|prowess|spellslinger)/i
+    core:
+      /\b(instant(s)? (or|and) sorceries?|copy target spell|storm|magecraft)/i,
+
+    support:
+      /\b(cost.*less|prowess|spellslinger)/i,
   },
 
   artifacts: {
-    core: /\b(artifact(s)?|treasure|clue|historic|metalcraft|affinity)/i,
-    support: /\b(improvise|modular|equipment|vehicle)/i
+    core:
+      /\b(artifact(s)?|treasure|clue|historic|metalcraft|affinity)/i,
+
+    support:
+      /\b(improvise|modular|equipment|vehicle)/i,
   },
 
   graveyard: {
-    core: /\b(graveyard|mill|reanimate|dredge|escape|flashback|unearth)/i,
-    support: /\b(delve|threshold|delirium|entomb)/i
+    core:
+      /\b(graveyard|mill|reanimate|dredge|escape|flashback|unearth)/i,
+
+    support:
+      /\b(delve|threshold|delirium|entomb)/i,
   },
 
   aggro: {
-    core: /\b(haste|attack(s|ing)|combat|\+\d\/|battalion|raid)/i,
-    support: /\b(menace|trample|first strike|double strike)/i
+    core:
+      /\b(haste|attack(s|ing)|combat|\+\d\/|battalion|raid)/i,
+
+    support:
+      /\b(menace|trample|first strike|double strike)/i,
   },
 
   control: {
-    core: /\b(counter target|destroy all|exile all|board wipe)/i,
-    support: /\b(draw.*card|scry|flash)/i
+    core:
+      /\b(counter target|destroy all|exile all|board wipe)/i,
+
+    support:
+      /\b(draw.*card|scry|flash)/i,
   },
 
   ramp: {
-    core: /\b(add \{|search.*land|mana dork|mana rock)/i,
-    support: /\b(cultivate|kodama|exploration)/i
+    core:
+      /\b(add \{|search.*land|mana dork|mana rock)/i,
+
+    support:
+      /\b(cultivate|kodama|exploration)/i,
   },
 
   counters: {
-    core: /\b(\+1\/\+1 counter|proliferate|doubling counters)/i,
-    support: /\b(modular|adapt|evolve|support)/i
+    core:
+      /\b(\+1\/\+1 counter|proliferate|-1\/-1 counter)/i,
+
+    support:
+      /\b(modular|graft|evolve|mentor)/i,
   },
 
-  blink: {
-    core: /\b(exile.*return|flicker|blink|when.*enters)/i,
-    support: /\b(enter(s)?.*battlefield|etb)/i
+  enchantress: {
+    core:
+      /\b(enchantment|aura|constellation|whenever.*enchantment)/i,
+
+    support:
+      /\b(enchantress|shrine|saga)/i,
   },
 
   tribal: {
-    core: /\b(creature type|choose a creature type|tribal)/i,
-    support: /\b(changeling|lord|anthem)/i
-  }
+    core:
+      /\b(creatures? you control (get|have)|creature type|changeling)/i,
+
+    support:
+      /\b(lord|anthem|kindred|tribal)/i,
+  },
 };
 
 // ---------- RELEVANCIA PARA EL PERFIL ----------
@@ -579,18 +641,18 @@ export function computeProfileRelevance(
   theme
 ) {
   const text = (
-    card.oracle_text || ''
+    card.oracle_text || ""
   ).toLowerCase();
 
   const type = (
-    card.type_line || ''
+    card.type_line || ""
   ).toLowerCase();
 
   const name = normalizeCardName(
     card.name
   );
 
-  if (type.includes('land')) {
+  if (type.includes("land")) {
     return computeLandRelevance(
       card,
       profile
@@ -600,27 +662,36 @@ export function computeProfileRelevance(
   let score = 0;
   let hits = 0;
 
-  if (UNIVERSAL_STAPLES.has(name)) {
+  if (
+    UNIVERSAL_STAPLES.has(name)
+  ) {
     score += 0.25;
     hits++;
   }
 
   const isRamp =
-    /add \{[WUBRGC]|search.*land|\{t\}.*add/i
-      .test(text) &&
-    !type.includes('land');
+    /add \{[WUBRGC]|search.*land|\{t\}.*add/i.test(
+      text
+    ) &&
+    !type.includes("land");
 
   const isDraw =
-    /draw.*card|look at.*top.*hand/i
-      .test(text);
+    /draw.*card|look at.*top.*hand/i.test(
+      text
+    );
 
   if (isRamp || isDraw) {
     score += 0.15;
     hits++;
   }
 
-  if (profile.careAboutCreatureType) {
-    for (const tribe of profile.tribes) {
+  if (
+    profile.careAboutCreatureType
+  ) {
+    for (
+      const tribe
+      of profile.tribes
+    ) {
       if (
         text.includes(tribe) ||
         type.includes(tribe)
@@ -646,8 +717,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutCounters &&
-    /\+1\/\+1 counter|proliferate/i
-      .test(text)
+    /\+1\/\+1 counter|proliferate/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -655,8 +727,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutTokens &&
-    /create.*token|token.*you control/i
-      .test(text)
+    /create.*token|token.*you control/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -664,8 +737,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutGraveyard &&
-    /graveyard|reanimate|flashback|unearth/i
-      .test(text)
+    /graveyard|reanimate|flashback|unearth/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -673,8 +747,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutSpells &&
-    /instant|sorcery|whenever you cast|magecraft/i
-      .test(text)
+    /instant|sorcery|whenever you cast|magecraft/i.test(
+      text
+    )
   ) {
     score += 0.3;
     hits++;
@@ -682,8 +757,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutLifegain &&
-    /gain.*life|lifelink|whenever.*gain life/i
-      .test(text)
+    /gain.*life|lifelink|whenever.*gain life/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -691,8 +767,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutSacrifice &&
-    /sacrifice|when.*dies/i
-      .test(text)
+    /sacrifice|when.*dies/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -700,8 +777,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutETB &&
-    /when.*enters|flicker|blink/i
-      .test(text)
+    /when.*enters|flicker|blink/i.test(
+      text
+    )
   ) {
     score += 0.3;
     hits++;
@@ -709,8 +787,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutArtifacts &&
-    /\bartifact\b|treasure/i
-      .test(text)
+    /\bartifact\b|treasure/i.test(
+      text
+    )
   ) {
     score += 0.3;
     hits++;
@@ -718,8 +797,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutEnchantments &&
-    /\benchantment\b|constellation/i
-      .test(text)
+    /\benchantment\b|constellation/i.test(
+      text
+    )
   ) {
     score += 0.3;
     hits++;
@@ -727,8 +807,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutLandfall &&
-    /landfall|land.*enters.*battlefield/i
-      .test(text)
+    /landfall|land.*enters.*battlefield/i.test(
+      text
+    )
   ) {
     score += 0.4;
     hits++;
@@ -736,8 +817,9 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutEquipment &&
-    /equip|equipment|enchant creature/i
-      .test(text)
+    /equip|equipment|enchant creature/i.test(
+      text
+    )
   ) {
     score += 0.35;
     hits++;
@@ -745,17 +827,18 @@ export function computeProfileRelevance(
 
   if (
     profile.careAboutPing &&
-    /whenever.*deals damage|deals.*damage.*each/i
-      .test(text)
+    /whenever.*deals damage|deals.*damage.*each/i.test(
+      text
+    )
   ) {
     score += 0.3;
     hits++;
   }
 
   if (
-    profile.mechanics.has('ally') &&
+    profile.mechanics.has("ally") &&
     (
-      type.includes('ally') ||
+      type.includes("ally") ||
       /\bally\b/i.test(text)
     )
   ) {
@@ -765,7 +848,7 @@ export function computeProfileRelevance(
 
   if (
     theme &&
-    theme !== 'none' &&
+    theme !== "none" &&
     themePatterns[theme]
   ) {
     const config =
@@ -792,473 +875,1077 @@ export function computeProfileRelevance(
   return Math.min(score, 1);
 }
 
-// ---------- ETIQUETAS FUNCIONALES ----------
-export function getCardTags(card) {
+// ---------- COMBOS ----------
+const knownCombos = [
+  {
+    pieces: [
+      "peregrine drake",
+      "deadeye navigator",
+    ],
+
+    support: [
+      "palinchron",
+      "great whale",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "dramatic reversal",
+      "isochron scepter",
+    ],
+
+    support: [
+      "sol ring",
+      "mana vault",
+      "arcane signet",
+    ],
+
+    value: 35,
+  },
+
+  {
+    pieces: [
+      "basalt monolith",
+      "rings of brighthearth",
+    ],
+
+    support: [
+      "power artifact",
+    ],
+
+    value: 28,
+  },
+
+  {
+    pieces: [
+      "dockside extortionist",
+      "temur sabertooth",
+    ],
+
+    support: [
+      "cloudstone curio",
+    ],
+
+    value: 32,
+  },
+
+  {
+    pieces: [
+      "worldgorger dragon",
+      "animate dead",
+    ],
+
+    support: [
+      "dance of the dead",
+      "necromancy",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "kiki-jiki, mirror breaker",
+      "zealous conscripts",
+    ],
+
+    support: [
+      "splinter twin",
+      "pestermite",
+      "deceiver exarch",
+      "felidar guardian",
+    ],
+
+    value: 35,
+  },
+
+  {
+    pieces: [
+      "reveillark",
+      "karmic guide",
+    ],
+
+    support: [
+      "fiend hunter",
+      "altar of dementia",
+      "viscera seer",
+    ],
+
+    value: 28,
+  },
+
+  {
+    pieces: [
+      "nim deathmantle",
+      "ashnod's altar",
+    ],
+
+    support: [
+      "grave titan",
+      "wurmcoil engine",
+    ],
+
+    value: 25,
+  },
+
+  {
+    pieces: [
+      "niv-mizzet, parun",
+      "curiosity",
+    ],
+
+    support: [
+      "niv-mizzet, the firemind",
+      "ophidian eye",
+      "tandem lookout",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "exquisite blood",
+      "sanguine bond",
+    ],
+
+    support: [
+      "vito, thorn of the dusk rose",
+    ],
+
+    value: 28,
+  },
+
+  {
+    pieces: [
+      "mikaeus, the unhallowed",
+      "triskelion",
+    ],
+
+    support: [
+      "walking ballista",
+      "murderous redcap",
+    ],
+
+    value: 32,
+  },
+
+  {
+    pieces: [
+      "heliod, sun-crowned",
+      "walking ballista",
+    ],
+
+    support: [
+      "spike feeder",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "thassa's oracle",
+      "demonic consultation",
+    ],
+
+    support: [
+      "tainted pact",
+      "laboratory maniac",
+    ],
+
+    value: 40,
+  },
+
+  {
+    pieces: [
+      "painter's servant",
+      "grindstone",
+    ],
+
+    support: [],
+
+    value: 28,
+  },
+
+  {
+    pieces: [
+      "time warp",
+      "archaeomancer",
+    ],
+
+    support: [
+      "ghostly flicker",
+      "displace",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "gravecrawler",
+      "phyrexian altar",
+    ],
+
+    support: [
+      "blood artist",
+      "zulaport cutthroat",
+    ],
+
+    value: 30,
+  },
+
+  {
+    pieces: [
+      "devoted druid",
+      "vizier of remedies",
+    ],
+
+    support: [],
+
+    value: 28,
+  },
+
+  {
+    pieces: [
+      "spike feeder",
+      "archangel of thune",
+    ],
+
+    support: [],
+
+    value: 26,
+  },
+];
+
+// ---------- PAQUETES ----------
+const synergyPackages = [
+  {
+    core: [
+      "conjurer's closet",
+      "panharmonicon",
+      "thassa, deep-dwelling",
+    ],
+
+    synergizes: [
+      "mulldrifter",
+      "cloudblazer",
+      "ravenous chupacabra",
+      "eternal witness",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "doubling season",
+      "parallel lives",
+      "anointed procession",
+    ],
+
+    synergizes: [
+      "avenger of zendikar",
+      "tendershoot dryad",
+    ],
+
+    value: 0.22,
+  },
+
+  {
+    core: [
+      "viscera seer",
+      "ashnod's altar",
+      "phyrexian altar",
+    ],
+
+    synergizes: [
+      "grave pact",
+      "dictate of erebos",
+      "blood artist",
+      "zulaport cutthroat",
+    ],
+
+    value: 0.22,
+  },
+
+  {
+    core: [
+      "reanimate",
+      "animate dead",
+      "necromancy",
+    ],
+
+    synergizes: [
+      "entomb",
+      "buried alive",
+      "faithless looting",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "thousand-year storm",
+      "storm-kiln artist",
+    ],
+
+    synergizes: [
+      "aetherflux reservoir",
+      "guttersnipe",
+    ],
+
+    value: 0.22,
+  },
+
+  {
+    core: [
+      "wheel of fortune",
+      "windfall",
+      "whispering madness",
+    ],
+
+    synergizes: [
+      "notion thief",
+      "narset, parter of veils",
+      "smothering tithe",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "enchantress's presence",
+      "argothian enchantress",
+    ],
+
+    synergizes: [
+      "sigil of the empty throne",
+      "sphere of safety",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "hardened scales",
+      "doubling season",
+      "branching evolution",
+    ],
+
+    synergizes: [
+      "walking ballista",
+      "hangarback walker",
+      "kalonian hydra",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "stoneforge mystic",
+      "puresteel paladin",
+      "sram, senior edificer",
+    ],
+
+    synergizes: [
+      "sword of feast and famine",
+      "sword of fire and ice",
+      "batterskull",
+    ],
+
+    value: 0.2,
+  },
+
+  {
+    core: [
+      "smothering tithe",
+      "dockside extortionist",
+      "goldspan dragon",
+    ],
+
+    synergizes: [
+      "revel in riches",
+      "academy manufactor",
+      "marionette master",
+    ],
+
+    value: 0.22,
+  },
+];
+
+// ---------- AUXILIARES ----------
+function evaluateManaEfficiency(card) {
+  const cmc = card.cmc || 0;
+
   const text = (
-    card.oracle_text || ''
+    card.oracle_text || ""
   ).toLowerCase();
 
-  const type = (
-    card.type_line || ''
-  ).toLowerCase();
+  let score = 0;
 
-  const tags = [];
+  if (cmc <= 2) {
+    score += 10;
 
-  if (type.includes('land')) {
-    tags.push('land');
-    return tags;
-  }
-
-  const isRamp =
-    (
-      /add \{[WUBRGC]\}/i.test(text) ||
-      /search your library for (?:a|up to \w+) .*land/i
-        .test(text) ||
-      /put .*land card.*onto the battlefield/i
-        .test(text)
-    ) &&
-    !type.includes('land');
-
-  if (isRamp) {
-    tags.push('ramp');
-  }
-
-  if (
-    /draw (?:a|one|two|three|\d+) cards?/i
-      .test(text) ||
-    /draw cards equal/i.test(text) ||
-    /whenever.*draw.*card/i.test(text)
-  ) {
-    tags.push('draw');
-  }
-
-  if (
-    /destroy target|exile target|return target .* to (?:its|their) owner's hand|counter target spell/i
-      .test(text)
-  ) {
-    tags.push('removal');
-  }
-
-  if (
-    /destroy all|exile all|all creatures get -\d+\/-\d+|each creature gets -\d+\/-\d+/i
-      .test(text)
-  ) {
-    tags.push('wipe');
-  }
-
-  if (
-    /search your library for (?:a|an|any) card/i
-      .test(text) ||
-    /search your library for a .* card, reveal/i
-      .test(text)
-  ) {
-    tags.push('tutor');
-  }
-
-  if (
-    /hexproof|indestructible|protection from|phase out|counter target spell that targets|regenerate/i
-      .test(text)
-  ) {
-    tags.push('protection');
-  }
-
-  if (
-    /return target .* card from your graveyard/i
-      .test(text) ||
-    /return .* from your graveyard to the battlefield/i
-      .test(text) ||
-    /you may cast .* from your graveyard/i
-      .test(text)
-  ) {
-    tags.push('recursion');
-  }
-
-  return [...new Set(tags)];
-}
-
-// ---------- DATOS EDHREC ----------
-export function buildCommanderSynergyMap(
-  edhrecCards = []
-) {
-  const result = new Map();
-
-  for (const item of edhrecCards) {
-    const name =
-      item.name ||
-      item.card?.name ||
-      item.sanitized ||
-      '';
-
-    if (!name) {
-      continue;
+    if (
+      /draw|destroy|exile/.test(
+        text
+      )
+    ) {
+      score += 6;
     }
+  } else if (cmc <= 4) {
+    score += 4;
+  } else if (cmc >= 7) {
+    score -= 5;
 
-    const synergy =
-      Number(item.synergy) ||
-      Number(item.synergy_score) ||
-      0;
-
-    result.set(
-      normalizeCardName(name),
-      synergy
-    );
-  }
-
-  return result;
-}
-
-export function buildCooccurrenceMap(
-  edhrecCards = []
-) {
-  const result = new Map();
-
-  let maximumDeckCount = 0;
-
-  for (const item of edhrecCards) {
-    const count =
-      Number(item.num_decks) ||
-      Number(item.inclusion) ||
-      Number(item.count) ||
-      0;
-
-    maximumDeckCount = Math.max(
-      maximumDeckCount,
-      count
-    );
-  }
-
-  for (const item of edhrecCards) {
-    const name =
-      item.name ||
-      item.card?.name ||
-      item.sanitized ||
-      '';
-
-    if (!name) {
-      continue;
+    if (
+      /\ball\b|\beach\b|win the game/.test(
+        text
+      )
+    ) {
+      score += 8;
     }
-
-    const count =
-      Number(item.num_decks) ||
-      Number(item.inclusion) ||
-      Number(item.count) ||
-      0;
-
-    const normalized =
-      maximumDeckCount > 0
-        ? count / maximumDeckCount
-        : 0;
-
-    result.set(
-      normalizeCardName(name),
-      normalized
-    );
   }
 
-  return result;
+  if (
+    /cost.*less|without paying/.test(
+      text
+    )
+  ) {
+    score += 8;
+  }
+
+  return score;
 }
 
-// ---------- SINERGIA DEL MAZO ----------
-function getMechanicSet(card) {
+function evaluateCombatKeywords(card) {
   const text = (
-    card.oracle_text || ''
+    card.oracle_text || ""
   ).toLowerCase();
 
-  const mechanics = new Set();
+  const keywords = (
+    card.keywords || []
+  ).map(keyword =>
+    keyword.toLowerCase()
+  );
+
+  const values = {
+    flying: 8,
+    hexproof: 15,
+    indestructible: 18,
+    haste: 10,
+    flash: 12,
+    deathtouch: 10,
+    trample: 7,
+    "double strike": 15,
+    lifelink: 8,
+    cascade: 20,
+    ward: 10,
+    persist: 10,
+    undying: 12,
+    menace: 6,
+  };
+
+  let score = 0;
 
   for (
-    const { pattern, group }
-    of MECHANIC_GROUPS
+    const [keyword, value]
+    of Object.entries(values)
   ) {
-    if (pattern.test(text)) {
-      mechanics.add(group);
+    if (
+      text.includes(keyword) ||
+      keywords.includes(keyword)
+    ) {
+      score += value;
     }
   }
 
-  return mechanics;
+  return Math.min(score, 50);
 }
 
-export function computeDeckSynergyMap(
-  candidates,
-  selectedCards
-) {
-  const result = new Map();
+function evaluateVersatility(card) {
+  const text = (
+    card.oracle_text || ""
+  ).toLowerCase();
 
-  const selectedMechanics = new Set();
-  const selectedTribes = new Set();
+  let score = 0;
 
-  for (const selected of selectedCards) {
-    const text = (
-      selected.oracle_text || ''
-    ).toLowerCase();
-
-    const type = (
-      selected.type_line || ''
-    ).toLowerCase();
-
-    for (
-      const mechanic
-      of getMechanicSet(selected)
-    ) {
-      selectedMechanics.add(mechanic);
-    }
-
-    for (const tribe of CREATURE_TYPES) {
-      if (
-        type.includes(tribe) ||
-        text.includes(tribe)
-      ) {
-        selectedTribes.add(tribe);
-      }
-    }
+  if (
+    /choose one|choose two|modal/.test(
+      text
+    )
+  ) {
+    score += 12;
   }
 
-  for (const card of candidates) {
-    const text = (
-      card.oracle_text || ''
-    ).toLowerCase();
-
-    const type = (
-      card.type_line || ''
-    ).toLowerCase();
-
-    let synergy = 0;
-
-    for (
-      const { pattern, group }
-      of MECHANIC_GROUPS
-    ) {
-      if (
-        selectedMechanics.has(group) &&
-        pattern.test(text)
-      ) {
-        synergy += 0.25;
-      }
-    }
-
-    for (const tribe of selectedTribes) {
-      if (
-        type.includes(tribe) ||
-        text.includes(tribe)
-      ) {
-        synergy += 0.2;
-      }
-    }
-
-    result.set(
-      normalizeCardName(card.name),
-      Math.min(synergy, 1)
-    );
+  if (
+    card.card_faces?.length > 1
+  ) {
+    score += 8;
   }
 
-  return result;
+  if (
+    /target permanent|any target/.test(
+      text
+    )
+  ) {
+    score += 8;
+  }
+
+  return score;
 }
 
-// ---------- COMBOS Y PAQUETES ----------
-const COMBO_PACKAGES = [
-  [
-    'exquisiteblood',
-    'sanguinebond'
-  ],
-  [
-    'mikaeustheunhallowed',
-    'walkingballista'
-  ],
-  [
-    'thassasoracle',
-    'demonicconsultation'
-  ],
-  [
-    'kikijikimirrorbreaker',
-    'zealousconscripts'
-  ],
-  [
-    'dramaticreversal',
-    'isochronscepter'
-  ]
-];
+function evaluatePenalties(card) {
+  const text = (
+    card.oracle_text || ""
+  ).toLowerCase();
+
+  let penalty = 0;
+
+  if (
+    /each (player|opponent) (draws|creates|gains)/.test(
+      text
+    )
+  ) {
+    penalty -= 12;
+  }
+
+  if (
+    /as an additional cost.*sacrifice a creature/.test(
+      text
+    )
+  ) {
+    penalty -= 8;
+  }
+
+  if (
+    /enters the battlefield tapped/.test(
+      text
+    )
+  ) {
+    penalty -= 5;
+  }
+
+  if (
+    /only during combat/.test(
+      text
+    )
+  ) {
+    penalty -= 4;
+  }
+
+  return penalty;
+}
 
 function evaluateComboValue(
   card,
   availableNorms
 ) {
-  const name = normalizeCardName(
-    card.name
-  );
+  const cardName =
+    normalizeCardName(card.name);
 
-  let value = 0;
+  let total = 0;
 
-  for (const combo of COMBO_PACKAGES) {
-    if (!combo.includes(name)) {
+  for (const combo of knownCombos) {
+    const pieceNames =
+      combo.pieces.map(
+        normalizeCardName
+      );
+
+    const supportNames =
+      combo.support.map(
+        normalizeCardName
+      );
+
+    const isPiece =
+      pieceNames.includes(cardName);
+
+    const isSupport =
+      !isPiece &&
+      supportNames.includes(cardName);
+
+    if (!isPiece && !isSupport) {
       continue;
     }
 
-    const otherPieces =
-      combo.filter(piece => piece !== name);
+    const availablePieces =
+      pieceNames.filter(
+        piece =>
+          piece === cardName ||
+          availableNorms.has(piece)
+      ).length;
 
-    const complete =
-      otherPieces.every(piece =>
-        availableNorms.has(piece)
-      );
+    const ratio =
+      availablePieces /
+      pieceNames.length;
 
-    if (complete) {
-      value += 0.65;
-    } else {
-      value -= 0.08;
+    if (isPiece) {
+      total +=
+        combo.value *
+        (
+          ratio >= 1
+            ? 1.5
+            : ratio >= 0.5
+              ? ratio
+              : 0.3
+        );
+    }
+
+    if (isSupport) {
+      total +=
+        combo.value * 0.35;
     }
   }
 
-  return value;
+  return Math.min(total, 80);
 }
 
 function evaluateSynergyPackage(
   card,
   availableNorms
 ) {
-  const text = (
-    card.oracle_text || ''
-  ).toLowerCase();
+  const cardName =
+    normalizeCardName(card.name);
 
-  let value = 0;
+  let total = 0;
 
-  const packages = [
-    {
-      enabler:
-        /create.*token|whenever.*creature.*enters/i,
-      payoff:
-        /whenever.*creature.*dies|sacrifice another creature/i
-    },
-    {
-      enabler:
-        /mill|put.*graveyard/i,
-      payoff:
-        /return.*graveyard|cast.*graveyard/i
-    },
-    {
-      enabler:
-        /whenever.*cast.*instant|whenever.*cast.*sorcery/i,
-      payoff:
-        /copy.*spell|cost.*less/i
-    }
-  ];
+  for (
+    const synergyPackage
+    of synergyPackages
+  ) {
+    const coreNames =
+      synergyPackage.core.map(
+        normalizeCardName
+      );
 
-  for (const packageDefinition of packages) {
-    const isEnabler =
-      packageDefinition.enabler.test(text);
+    const synergyNames =
+      synergyPackage.synergizes.map(
+        normalizeCardName
+      );
 
-    const isPayoff =
-      packageDefinition.payoff.test(text);
+    const isCore =
+      coreNames.includes(cardName);
 
-    if (!isEnabler && !isPayoff) {
+    const isSynergy =
+      !isCore &&
+      synergyNames.includes(cardName);
+
+    if (!isCore && !isSynergy) {
       continue;
     }
 
-    let supportingCards = 0;
+    const coreRatio =
+      coreNames.filter(name =>
+        availableNorms.has(name)
+      ).length /
+      coreNames.length;
 
-    for (const name of availableNorms) {
-      if (name === normalizeCardName(card.name)) {
-        continue;
-      }
+    const synergyRatio =
+      synergyNames.filter(name =>
+        availableNorms.has(name)
+      ).length /
+      Math.max(
+        synergyNames.length,
+        1
+      );
 
-      supportingCards++;
-    }
-
-    if (supportingCards > 0) {
-      value += 0.08;
+    if (isCore) {
+      total +=
+        synergyPackage.value *
+        100 *
+        (
+          0.5 +
+          coreRatio * 0.3 +
+          synergyRatio * 0.2
+        );
+    } else {
+      total +=
+        synergyPackage.value *
+        100 *
+        0.5 *
+        coreRatio;
     }
   }
 
-  return Math.min(value, 0.3);
+  return Math.min(total, 50);
 }
 
-// ---------- PUNTUACIÓN ----------
+function popularityScore(rank) {
+  if (!Number.isFinite(rank)) {
+    return 0;
+  }
+
+  return 1 /
+    Math.log(rank + 10);
+}
+
+// ---------- TAGS PARA EL BUILDER ----------
+export function getCardTags(card) {
+  const tags = [];
+
+  const text = (
+    card.oracle_text || ""
+  ).toLowerCase();
+
+  const type = (
+    card.type_line || ""
+  ).toLowerCase();
+
+  if (type.includes("land")) {
+    tags.push("land");
+    return tags;
+  }
+
+  if (
+    /\badd \{[WUBRGC]|search your library for.*(basic )?land|create.*(treasure|gold)|\{T\}.*add/i.test(
+      text
+    ) ||
+    (
+      type.includes("creature") &&
+      /\{T\}.*add.*mana/i.test(text)
+    )
+  ) {
+    tags.push("ramp");
+  }
+
+  if (
+    /draw(s)? (a |one |two |three |\d+ )?card|exile the top.*you may (play|cast)|look at the top.*put.*into your hand/i.test(
+      text
+    )
+  ) {
+    tags.push("draw");
+  }
+
+  if (
+    /destroy all|exile all|damage to each creature|all creatures get -|sacrifice all/i.test(
+      text
+    )
+  ) {
+    tags.push("wipe");
+  } else if (
+    /destroy target|exile target|return target.*hand|deals \d+ damage to (target|any)/i.test(
+      text
+    )
+  ) {
+    tags.push("removal");
+  }
+
+  if (
+    /search your library for a(n)?(?!.*(basic land|forest|plains|island|swamp|mountain))/i.test(
+      text
+    )
+  ) {
+    tags.push("tutor");
+  }
+
+  if (
+    /hexproof|indestructible|protection from|counter target spell/i.test(
+      text
+    )
+  ) {
+    tags.push("protection");
+  }
+
+  if (
+    /return.*(from|in) your graveyard|reanimate|unearth|escape/i.test(
+      text
+    )
+  ) {
+    tags.push("recursion");
+  }
+
+  return tags;
+}
+
+// ---------- MAP BUILDERS ----------
+export function buildCommanderSynergyMap(
+  edhrecCards
+) {
+  const map = new Map();
+
+  if (
+    !Array.isArray(edhrecCards)
+  ) {
+    return map;
+  }
+
+  for (const card of edhrecCards) {
+    if (card?.name) {
+      map.set(
+        normalizeCardName(
+          card.name
+        ),
+        Number(card.synergy) || 0
+      );
+    }
+  }
+
+  return map;
+}
+
+export function buildCooccurrenceMap(
+  edhrecCards
+) {
+  const map = new Map();
+
+  if (
+    !Array.isArray(edhrecCards)
+  ) {
+    return map;
+  }
+
+  let maximum = 1;
+
+  for (const card of edhrecCards) {
+    if (
+      card?.num_decks > maximum
+    ) {
+      maximum =
+        card.num_decks;
+    }
+  }
+
+  for (const card of edhrecCards) {
+    if (card?.name) {
+      map.set(
+        normalizeCardName(
+          card.name
+        ),
+        (
+          card.num_decks || 0
+        ) /
+        maximum
+      );
+    }
+  }
+
+  return map;
+}
+
+export function computeDeckSynergyMap(
+  candidates,
+  selectedCards
+) {
+  const map = new Map();
+
+  const selectedMechanics =
+    new Set();
+
+  const selectedTypes =
+    new Set();
+
+  const selectedColors =
+    new Set();
+
+  for (
+    const selected
+    of selectedCards
+  ) {
+    const text = (
+      selected.oracle_text || ""
+    ).toLowerCase();
+
+    for (
+      const { pattern, group }
+      of MECHANIC_GROUPS
+    ) {
+      if (pattern.test(text)) {
+        selectedMechanics.add(
+          group
+        );
+      }
+    }
+
+    const typeLine = (
+      selected.type_line || ""
+    ).toLowerCase();
+
+    const subtypes =
+      typeLine.split("—")[1] ||
+      "";
+
+    for (
+      const part
+      of subtypes.split(/[,\s]+/)
+    ) {
+      const clean =
+        part.replace(
+          /[^a-z]/g,
+          ""
+        );
+
+      if (clean) {
+        selectedTypes.add(clean);
+      }
+    }
+
+    for (
+      const color
+      of selected.colors || []
+    ) {
+      selectedColors.add(color);
+    }
+  }
+
+  for (const card of candidates) {
+    let synergy = 0;
+
+    const text = (
+      card.oracle_text || ""
+    ).toLowerCase();
+
+    const typeLine = (
+      card.type_line || ""
+    ).toLowerCase();
+
+    for (
+      const { pattern, group }
+      of MECHANIC_GROUPS
+    ) {
+      if (
+        selectedMechanics.has(
+          group
+        ) &&
+        pattern.test(text)
+      ) {
+        synergy += 0.25;
+      }
+    }
+
+    for (
+      const color
+      of card.colors || []
+    ) {
+      if (
+        selectedColors.has(color)
+      ) {
+        synergy += 0.02;
+      }
+    }
+
+    for (
+      const type
+      of selectedTypes
+    ) {
+      if (
+        text.includes(type) ||
+        typeLine.includes(type)
+      ) {
+        synergy += 0.12;
+      }
+    }
+
+    map.set(
+      normalizeCardName(
+        card.name
+      ),
+      synergy
+    );
+  }
+
+  return map;
+}
+
+// ---------- SCORE PRINCIPAL ----------
 export function computeCardScore({
   card,
-  collectionCounts = new Map(),
+  collectionCounts,
   commanderProfile,
   commanderSynergyMap = new Map(),
   deckSynergyMap = new Map(),
   cooccurrenceMap = new Map(),
-  theme = 'none',
-  availableNorms = new Set()
+  theme = "none",
+  availableNorms = new Set(),
 }) {
-  const normalizedName =
+  const name =
     normalizeCardName(card.name);
-
-  const owned =
-    collectionCounts.has(normalizedName);
-
-  const profileRelevance =
-    computeProfileRelevance(
-      card,
-      commanderProfile,
-      theme
-    );
-
-  const commanderSynergy =
-    commanderSynergyMap.get(
-      normalizedName
-    ) || 0;
-
-  const deckSynergy =
-    deckSynergyMap.get(
-      normalizedName
-    ) || 0;
-
-  const popularity =
-    cooccurrenceMap.get(
-      normalizedName
-    ) || 0;
-
-  const comboValue =
-    evaluateComboValue(
-      card,
-      availableNorms
-    );
-
-  const packageValue =
-    evaluateSynergyPackage(
-      card,
-      availableNorms
-    );
-
-  const edhrecRank =
-    Number(card.edhrec_rank);
-
-  const rankScore =
-    Number.isFinite(edhrecRank)
-      ? Math.max(
-          0,
-          1 - Math.log10(edhrecRank + 1) / 5
-        )
-      : 0;
-
-  const price =
-    Number.parseFloat(
-      card.prices?.usd || '0'
-    ) || 0;
-
-  const pricePenalty =
-    owned
-      ? 0
-      : Math.min(price / 30, 0.4);
 
   let score = 0;
 
-  score += owned ? 100 : 0;
-  score += profileRelevance * 55;
-  score += commanderSynergy * 45;
-  score += deckSynergy * 30;
-  score += popularity * 14;
-  score += rankScore * 12;
-  score += comboValue * 40;
-  score += packageValue * 20;
-  score -= pricePenalty * 10;
+  if (commanderProfile) {
+    score +=
+      computeProfileRelevance(
+        card,
+        commanderProfile,
+        theme
+      ) * 120;
+  }
+
+  if (
+    collectionCounts.has(name)
+  ) {
+    score += 50;
+  }
+
+  score +=
+    (
+      commanderSynergyMap.get(
+        name
+      ) ?? 0
+    ) * 40;
+
+  score +=
+    (
+      deckSynergyMap.get(
+        name
+      ) ?? 0
+    ) * 30;
+
+  score +=
+    (
+      cooccurrenceMap.get(
+        name
+      ) ?? 0
+    ) * 20;
+
+  score +=
+    popularityScore(
+      card.edhrec_rank
+    ) * 12;
+
+  score +=
+    evaluateManaEfficiency(card);
+
+  score +=
+    evaluateCombatKeywords(
+      card
+    ) * 0.5;
+
+  score +=
+    evaluateVersatility(
+      card
+    ) * 0.6;
+
+  score +=
+    evaluatePenalties(card);
+
+  if (availableNorms.size > 0) {
+    score +=
+      evaluateComboValue(
+        card,
+        availableNorms
+      );
+
+    score +=
+      evaluateSynergyPackage(
+        card,
+        availableNorms
+      );
+  }
 
   return score;
 }
 
-// ---------- ORDENACIÓN ----------
+// ---------- SORT ----------
 export function sortByScore({
   cards,
   collectionCounts,
@@ -1267,11 +1954,19 @@ export function sortByScore({
   deckSynergyMap,
   cooccurrenceMap,
   theme,
-  availableNorms
 }) {
+  const availableNorms =
+    new Set(
+      cards.map(card =>
+        normalizeCardName(
+          card.name
+        )
+      )
+    );
+
   return [...cards].sort(
-    (cardA, cardB) => {
-      const scoreB = computeCardScore({
+    (cardA, cardB) =>
+      computeCardScore({
         card: cardB,
         collectionCounts,
         commanderProfile,
@@ -1279,10 +1974,9 @@ export function sortByScore({
         deckSynergyMap,
         cooccurrenceMap,
         theme,
-        availableNorms
-      });
-
-      const scoreA = computeCardScore({
+        availableNorms,
+      }) -
+      computeCardScore({
         card: cardA,
         collectionCounts,
         commanderProfile,
@@ -1290,14 +1984,12 @@ export function sortByScore({
         deckSynergyMap,
         cooccurrenceMap,
         theme,
-        availableNorms
-      });
-
-      return scoreB - scoreA;
-    }
+        availableNorms,
+      })
   );
 }
 
+// ---------- SORT ITERATIVO ----------
 export function sortByScoreIterative({
   cards,
   collectionCounts,
@@ -1307,42 +1999,21 @@ export function sortByScoreIterative({
   theme,
   commander,
   iterations = 3,
-  topN = 120
+  topN = 150,
 }) {
-  const availableNorms = new Set(
-    cards.map(card =>
-      normalizeCardName(card.name)
-    )
-  );
+  let selected =
+    commander
+      ? [commander]
+      : [];
 
-  let ordered = sortByScore({
-    cards,
-    collectionCounts,
-    commanderProfile,
-    commanderSynergyMap,
-    deckSynergyMap: new Map(),
-    cooccurrenceMap,
-    theme,
-    availableNorms
-  });
+  let deckSynergyMap =
+    computeDeckSynergyMap(
+      cards,
+      selected
+    );
 
-  for (
-    let iteration = 0;
-    iteration < iterations;
-    iteration++
-  ) {
-    const selected = [
-      commander,
-      ...ordered.slice(0, topN)
-    ].filter(Boolean);
-
-    const deckSynergyMap =
-      computeDeckSynergyMap(
-        cards,
-        selected
-      );
-
-    ordered = sortByScore({
+  let ordered =
+    sortByScore({
       cards,
       collectionCounts,
       commanderProfile,
@@ -1350,8 +2021,38 @@ export function sortByScoreIterative({
       deckSynergyMap,
       cooccurrenceMap,
       theme,
-      availableNorms
     });
+
+  for (
+    let index = 0;
+    index < iterations;
+    index++
+  ) {
+    selected = [
+      ...(
+        commander
+          ? [commander]
+          : []
+      ),
+      ...ordered.slice(0, topN),
+    ];
+
+    deckSynergyMap =
+      computeDeckSynergyMap(
+        cards,
+        selected
+      );
+
+    ordered =
+      sortByScore({
+        cards,
+        collectionCounts,
+        commanderProfile,
+        commanderSynergyMap,
+        deckSynergyMap,
+        cooccurrenceMap,
+        theme,
+      });
   }
 
   return ordered;
@@ -1359,60 +2060,83 @@ export function sortByScoreIterative({
 
 // ---------- CONSTRUCTOR CONSISTENTE ----------
 const FUNCTIONAL_ROLES = [
-  'ramp',
-  'draw',
-  'removal',
-  'wipe',
-  'tutor',
-  'protection',
-  'recursion'
+  "ramp",
+  "draw",
+  "removal",
+  "wipe",
+  "tutor",
+  "protection",
+  "recursion",
 ];
+
+function cardMechanics(card) {
+  const result = new Set();
+
+  const text = (
+    card.oracle_text || ""
+  ).toLowerCase();
+
+  for (
+    const { pattern, group }
+    of MECHANIC_GROUPS
+  ) {
+    if (pattern.test(text)) {
+      result.add(group);
+    }
+  }
+
+  return result;
+}
 
 function chooseBestRole(
   card,
-  roleCounts,
-  roleTargets
+  counts,
+  targets
 ) {
-  const cardRoles = getCardTags(card)
-    .filter(role =>
-      FUNCTIONAL_ROLES.includes(role)
+  const tags =
+    getCardTags(card).filter(
+      tag =>
+        FUNCTIONAL_ROLES.includes(
+          tag
+        )
     );
 
-  let bestRole = null;
-  let highestNeed = 0;
+  let best = null;
+  let bestNeed = 0;
 
-  for (const role of cardRoles) {
+  for (const role of tags) {
     const target = Math.max(
       0,
-      Number(roleTargets[role]) || 0
+      Number(targets[role]) || 0
     );
 
-    if (target === 0) {
+    if (!target) {
       continue;
     }
 
-    const current =
-      roleCounts[role] || 0;
-
     const need =
-      Math.max(0, target - current) /
+      Math.max(
+        0,
+        target -
+          (counts[role] || 0)
+      ) /
       target;
 
-    if (need > highestNeed) {
-      highestNeed = need;
-      bestRole = role;
+    if (need > bestNeed) {
+      bestNeed = need;
+      best = role;
     }
   }
 
   return {
-    role: bestRole,
-    need: highestNeed
+    role: best,
+    need: bestNeed,
   };
 }
 
-function computeCurvePenalty(
+function curvePenalty(
   card,
-  selectedCards
+  selected
 ) {
   const cmc =
     Number(card.cmc) || 0;
@@ -1421,56 +2145,57 @@ function computeCurvePenalty(
     return 0;
   }
 
-  const expensiveCards =
-    selectedCards.filter(
-      selected =>
-        (Number(selected.cmc) || 0) >= 5
+  const expensive =
+    selected.filter(
+      selectedCard =>
+        (
+          Number(
+            selectedCard.cmc
+          ) || 0
+        ) >= 5
     ).length;
 
-  const allowedExpensiveCards =
-    Math.max(
-      5,
-      Math.floor(
-        (selectedCards.length + 1) *
-        0.18
-      )
-    );
+  const allowed = Math.max(
+    5,
+    Math.floor(
+      (
+        selected.length + 1
+      ) * 0.18
+    )
+  );
 
-  if (
-    expensiveCards >=
-    allowedExpensiveCards
-  ) {
-    return (cmc - 3) * 4;
-  }
-
-  return (cmc - 3) * 0.8;
+  return expensive >= allowed
+    ? (cmc - 3) * 4
+    : (cmc - 3) * 0.8;
 }
 
-function computeRedundancyPenalty(
+function redundancyPenalty(
   card,
-  selectedCards
+  selected
 ) {
-  const cardMechanics =
-    getMechanicSet(card);
+  const mechanics =
+    cardMechanics(card);
 
   if (
-    cardMechanics.size === 0 ||
-    selectedCards.length < 8
+    !mechanics.size ||
+    selected.length < 8
   ) {
     return 0;
   }
 
-  const mechanicCounts = new Map();
+  const counts = new Map();
 
-  for (const selectedCard of selectedCards) {
+  for (
+    const chosen of selected
+  ) {
     for (
       const mechanic
-      of getMechanicSet(selectedCard)
+      of cardMechanics(chosen)
     ) {
-      mechanicCounts.set(
+      counts.set(
         mechanic,
         (
-          mechanicCounts.get(mechanic) ||
+          counts.get(mechanic) ||
           0
         ) + 1
       );
@@ -1479,13 +2204,16 @@ function computeRedundancyPenalty(
 
   let penalty = 0;
 
-  for (const mechanic of cardMechanics) {
+  for (
+    const mechanic
+    of mechanics
+  ) {
     const ratio =
       (
-        mechanicCounts.get(mechanic) ||
+        counts.get(mechanic) ||
         0
       ) /
-      selectedCards.length;
+      selected.length;
 
     if (ratio > 0.45) {
       penalty +=
@@ -1496,114 +2224,15 @@ function computeRedundancyPenalty(
   return penalty;
 }
 
-function hasMissingFunctionalRoles(
-  roleCounts,
-  roleTargets
-) {
-  return FUNCTIONAL_ROLES.some(
-    role => {
-      const current =
-        roleCounts[role] || 0;
-
-      const target =
-        Number(roleTargets[role]) || 0;
-
-      return current < target;
-    }
-  );
-}
-
-function getCardPrice(
-  card,
-  collectionCounts
-) {
-  const normalizedName =
-    normalizeCardName(card.name);
-
-  if (
-    collectionCounts.has(
-      normalizedName
-    )
-  ) {
-    return 0;
-  }
-
-  return (
-    Number.parseFloat(
-      card.prices?.usd || '0'
-    ) || 0
-  );
-}
-
-function scoreMarginalCandidate({
-  card,
-  selectedCards,
-  selectedContext,
-  selectedNames,
-  roleCounts,
-  roleTargets,
-  collectionCounts,
-  commanderProfile,
-  commanderSynergyMap,
-  deckSynergyMap,
-  cooccurrenceMap,
-  theme
-}) {
-  const normalizedName =
-    normalizeCardName(card.name);
-
-  const availableNorms =
-    new Set(selectedNames);
-
-  availableNorms.add(normalizedName);
-
-  const { role, need } =
-    chooseBestRole(
-      card,
-      roleCounts,
-      roleTargets
-    );
-
-  let score = computeCardScore({
-    card,
-    collectionCounts,
-    commanderProfile,
-    commanderSynergyMap,
-    deckSynergyMap,
-    cooccurrenceMap,
-    theme,
-    availableNorms
-  });
-
-  score += need * 55;
-
-  score -= computeCurvePenalty(
-    card,
-    selectedCards
-  );
-
-  score -= computeRedundancyPenalty(
-    card,
-    selectedCards
-  );
-
-  if (
-    !role &&
-    hasMissingFunctionalRoles(
-      roleCounts,
-      roleTargets
-    )
-  ) {
-    score -= 18;
-  }
-
-  return {
-    score,
-    role,
-    selectedContext
-  };
-}
-
+/**
+ * Construye el bloque no-tierra valorando
+ * cada incorporación respecto al mazo
+ * ya elegido.
+ *
+ * Los combos y paquetes solo cuentan
+ * cuando sus piezas están realmente
+ * seleccionadas.
+ */
 export function buildConsistentNonLandDeck({
   cards,
   targetCount,
@@ -1612,56 +2241,46 @@ export function buildConsistentNonLandDeck({
   commanderProfile,
   commanderSynergyMap = new Map(),
   cooccurrenceMap = new Map(),
-  theme = 'none',
+  theme = "none",
   commander = null,
   maxBudget = 0,
   startingCost = 0,
   maxPriceLimit = Infinity,
-  prefilterSize = 360
+  prefilterSize = 360,
 }) {
-  const safeCollectionCounts =
-    collectionCounts || new Map();
-
-  const emptyDeckSynergy =
+  const emptySynergy =
     new Map();
 
-  const noAvailableComboPieces =
-    new Set();
-
-  const prefilteredCards = [
-    ...cards
+  const baseOrdered = [
+    ...cards,
   ]
-    .sort((cardA, cardB) => {
-      const scoreB = computeCardScore({
-        card: cardB,
-        collectionCounts:
-          safeCollectionCounts,
-        commanderProfile,
-        commanderSynergyMap,
-        deckSynergyMap:
-          emptyDeckSynergy,
-        cooccurrenceMap,
-        theme,
-        availableNorms:
-          noAvailableComboPieces
-      });
-
-      const scoreA = computeCardScore({
-        card: cardA,
-        collectionCounts:
-          safeCollectionCounts,
-        commanderProfile,
-        commanderSynergyMap,
-        deckSynergyMap:
-          emptyDeckSynergy,
-        cooccurrenceMap,
-        theme,
-        availableNorms:
-          noAvailableComboPieces
-      });
-
-      return scoreB - scoreA;
-    })
+    .sort(
+      (cardA, cardB) =>
+        computeCardScore({
+          card: cardB,
+          collectionCounts,
+          commanderProfile,
+          commanderSynergyMap,
+          deckSynergyMap:
+            emptySynergy,
+          cooccurrenceMap,
+          theme,
+          availableNorms:
+            new Set(),
+        }) -
+        computeCardScore({
+          card: cardA,
+          collectionCounts,
+          commanderProfile,
+          commanderSynergyMap,
+          deckSynergyMap:
+            emptySynergy,
+          cooccurrenceMap,
+          theme,
+          availableNorms:
+            new Set(),
+        })
+    )
     .slice(
       0,
       Math.max(
@@ -1670,138 +2289,856 @@ export function buildConsistentNonLandDeck({
       )
     );
 
-  const selectedCards = [];
+  const selected = [];
 
-  const remainingCards = new Map(
-    prefilteredCards.map(card => [
-      normalizeCardName(card.name),
-      card
+  const remaining = new Map(
+    baseOrdered.map(card => [
+      normalizeCardName(
+        card.name
+      ),
+      card,
     ])
   );
 
-  const roleCounts =
+  const counts =
     Object.fromEntries(
       FUNCTIONAL_ROLES.map(
         role => [role, 0]
       )
     );
 
-  let currentCost = startingCost;
+  let cost = startingCost;
 
   while (
-    selectedCards.length < targetCount &&
-    remainingCards.size > 0
+    selected.length <
+      targetCount &&
+    remaining.size
   ) {
     const selectedContext =
       commander
-        ? [commander, ...selectedCards]
-        : [...selectedCards];
-
-    const remainingValues = [
-      ...remainingCards.values()
-    ];
+        ? [
+            commander,
+            ...selected,
+          ]
+        : selected;
 
     const deckSynergyMap =
       computeDeckSynergyMap(
-        remainingValues,
+        [
+          ...remaining.values(),
+        ],
         selectedContext
       );
 
-    const selectedNames = new Set(
-      selectedContext.map(card =>
-        normalizeCardName(card.name)
-      )
-    );
+    const selectedNorms =
+      new Set(
+        selectedContext.map(card =>
+          normalizeCardName(
+            card.name
+          )
+        )
+      );
 
-    let bestCandidate = null;
+    let best = null;
 
     for (
       const card
-      of remainingValues
+      of remaining.values()
     ) {
-      const price = getCardPrice(
-        card,
-        safeCollectionCounts
-      );
+      const name =
+        normalizeCardName(
+          card.name
+        );
 
-      if (price > maxPriceLimit) {
+      const owned =
+        collectionCounts.has(name);
+
+      const price = owned
+        ? 0
+        : Number.parseFloat(
+            card.prices?.usd ||
+              "0"
+          ) || 0;
+
+      if (
+        price > maxPriceLimit
+      ) {
         continue;
       }
 
       if (
         maxBudget > 0 &&
-        currentCost + price > maxBudget
+        cost + price >
+          maxBudget
       ) {
         continue;
       }
 
-      const marginal =
-        scoreMarginalCandidate({
+      const { role, need } =
+        chooseBestRole(
           card,
-          selectedCards,
-          selectedContext,
-          selectedNames,
-          roleCounts,
-          roleTargets,
-          collectionCounts:
-            safeCollectionCounts,
+          counts,
+          roleTargets
+        );
+
+      const availableNorms =
+        new Set(selectedNorms);
+
+      availableNorms.add(name);
+
+      let score =
+        computeCardScore({
+          card,
+          collectionCounts,
           commanderProfile,
           commanderSynergyMap,
           deckSynergyMap,
           cooccurrenceMap,
-          theme
+          theme,
+          availableNorms,
         });
 
-      if (
-        bestCandidate === null ||
-        marginal.score >
-          bestCandidate.score
-      ) {
-        bestCandidate = {
+      score += need * 55;
+
+      score -= curvePenalty(
+        card,
+        selected
+      );
+
+      score -=
+        redundancyPenalty(
           card,
-          role: marginal.role,
-          score: marginal.score,
-          price
+          selected
+        );
+
+      const missingRoles =
+        FUNCTIONAL_ROLES.some(
+          functionalRole =>
+            (
+              counts[
+                functionalRole
+              ] || 0
+            ) <
+            (
+              Number(
+                roleTargets[
+                  functionalRole
+                ]
+              ) || 0
+            )
+        );
+
+      if (
+        !role &&
+        missingRoles
+      ) {
+        score -= 18;
+      }
+
+      if (
+        !best ||
+        score > best.score
+      ) {
+        best = {
+          card,
+          score,
+          role,
+          price,
         };
       }
     }
 
-    if (!bestCandidate) {
+    if (!best) {
       break;
     }
 
-    const selectedCard = {
-      ...bestCandidate.card,
+    const chosen = {
+      ...best.card,
+
       _assignedRole:
-        bestCandidate.role ||
-        'flex synergy',
+        best.role ||
+        "flex synergy",
+
       _selectionScore:
-        bestCandidate.score
+        best.score,
     };
 
-    selectedCards.push(
-      selectedCard
-    );
+    selected.push(chosen);
 
-    if (bestCandidate.role) {
-      roleCounts[
-        bestCandidate.role
-      ]++;
+    if (best.role) {
+      counts[best.role]++;
     }
 
-    currentCost +=
-      bestCandidate.price;
+    cost += best.price;
 
-    remainingCards.delete(
+    remaining.delete(
       normalizeCardName(
-        bestCandidate.card.name
+        best.card.name
       )
     );
   }
 
   return {
-    cards: selectedCards,
+    cards: selected,
+    cost,
+    roleCounts: counts,
+  };
+}
+
+// ---------- EVALUACIÓN GLOBAL ----------
+function countDeckRoles(cards) {
+  const counts =
+    Object.fromEntries(
+      FUNCTIONAL_ROLES.map(
+        role => [role, 0]
+      )
+    );
+
+  for (const card of cards) {
+    const assigned =
+      card._assignedRole;
+
+    if (
+      FUNCTIONAL_ROLES.includes(
+        assigned
+      )
+    ) {
+      counts[assigned]++;
+      continue;
+    }
+
+    for (
+      const tag
+      of getCardTags(card)
+    ) {
+      if (
+        FUNCTIONAL_ROLES.includes(
+          tag
+        )
+      ) {
+        counts[tag]++;
+      }
+    }
+  }
+
+  return counts;
+}
+
+function scoreRoleCoverage(
+  cards,
+  roleTargets
+) {
+  const counts =
+    countDeckRoles(cards);
+
+  let score = 0;
+
+  for (
+    const role
+    of FUNCTIONAL_ROLES
+  ) {
+    const target = Math.max(
+      0,
+      Number(
+        roleTargets?.[role]
+      ) || 0
+    );
+
+    if (!target) {
+      continue;
+    }
+
+    const count =
+      counts[role] || 0;
+
+    score +=
+      (
+        Math.min(
+          count,
+          target
+        ) /
+        target
+      ) * 24;
+
+    if (count < target) {
+      score -=
+        (target - count) * 13;
+    }
+
+    if (
+      count >
+      target * 1.8
+    ) {
+      score -=
+        (
+          count -
+          target * 1.8
+        ) * 2;
+    }
+  }
+
+  return {
+    score,
+    counts,
+  };
+}
+
+function scoreManaCurve(cards) {
+  const nonLands =
+    cards.filter(
+      card =>
+        !(
+          card.type_line || ""
+        )
+          .toLowerCase()
+          .includes("land")
+    );
+
+  if (!nonLands.length) {
+    return 0;
+  }
+
+  const manaValues =
+    nonLands.map(
+      card =>
+        Number(card.cmc) || 0
+    );
+
+  const average =
+    manaValues.reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    ) /
+    manaValues.length;
+
+  const expensiveRatio =
+    manaValues.filter(
+      value => value >= 5
+    ).length /
+    manaValues.length;
+
+  const cheapRatio =
+    manaValues.filter(
+      value => value <= 2
+    ).length /
+    manaValues.length;
+
+  let score = 28;
+
+  score -=
+    Math.abs(
+      average - 3.15
+    ) * 9;
+
+  if (
+    expensiveRatio > 0.23
+  ) {
+    score -=
+      (
+        expensiveRatio -
+        0.23
+      ) * 100;
+  }
+
+  if (cheapRatio < 0.22) {
+    score -=
+      (
+        0.22 -
+        cheapRatio
+      ) * 65;
+  }
+
+  return score;
+}
+
+function scoreMechanicBalance(
+  cards
+) {
+  if (!cards.length) {
+    return 0;
+  }
+
+  const counts = new Map();
+
+  for (const card of cards) {
+    for (
+      const mechanic
+      of cardMechanics(card)
+    ) {
+      counts.set(
+        mechanic,
+        (
+          counts.get(mechanic) ||
+          0
+        ) + 1
+      );
+    }
+  }
+
+  let score = 0;
+
+  for (
+    const count
+    of counts.values()
+  ) {
+    const ratio =
+      count / cards.length;
+
+    if (count >= 4) {
+      score +=
+        Math.min(
+          count,
+          12
+        ) * 0.8;
+    }
+
+    if (ratio > 0.52) {
+      score -=
+        (
+          ratio - 0.52
+        ) * 70;
+    }
+  }
+
+  return score;
+}
+
+function scorePackageCompleteness(
+  cards
+) {
+  const names =
+    new Set(
+      cards.map(card =>
+        normalizeCardName(
+          card.name
+        )
+      )
+    );
+
+  let score = 0;
+
+  for (
+    const combo
+    of knownCombos
+  ) {
+    const pieces =
+      combo.pieces.map(
+        normalizeCardName
+      );
+
+    const present =
+      pieces.filter(piece =>
+        names.has(piece)
+      ).length;
+
+    if (
+      present === pieces.length
+    ) {
+      score +=
+        combo.value * 0.9;
+    } else if (present > 0) {
+      score -=
+        combo.value *
+        0.35 *
+        (
+          present /
+          pieces.length
+        );
+    }
+  }
+
+  for (
+    const synergyPackage
+    of synergyPackages
+  ) {
+    const core =
+      synergyPackage.core.map(
+        normalizeCardName
+      );
+
+    const support =
+      synergyPackage.synergizes.map(
+        normalizeCardName
+      );
+
+    const coreCount =
+      core.filter(name =>
+        names.has(name)
+      ).length;
+
+    const supportCount =
+      support.filter(name =>
+        names.has(name)
+      ).length;
+
+    if (
+      coreCount &&
+      supportCount
+    ) {
+      score +=
+        (
+          coreCount * 3 +
+          supportCount * 1.5
+        ) *
+        synergyPackage.value *
+        10;
+    } else if (
+      coreCount &&
+      !supportCount
+    ) {
+      score -=
+        coreCount *
+        synergyPackage.value *
+        8;
+    }
+  }
+
+  return score;
+}
+
+function scoreCommanderAlignment(
+  cards,
+  commanderProfile,
+  theme
+) {
+  if (
+    !cards.length ||
+    !commanderProfile
+  ) {
+    return 0;
+  }
+
+  const relevance =
+    cards.reduce(
+      (sum, card) =>
+        sum +
+        computeProfileRelevance(
+          card,
+          commanderProfile,
+          theme
+        ),
+      0
+    );
+
+  return (
+    relevance /
+    cards.length *
+    45
+  );
+}
+
+/**
+ * Puntúa la coherencia del mazo
+ * como conjunto, no carta a carta.
+ */
+export function scoreWholeDeck({
+  cards,
+  roleTargets = {},
+  commanderProfile = null,
+  theme = "none",
+}) {
+  const roleResult =
+    scoreRoleCoverage(
+      cards,
+      roleTargets
+    );
+
+  const breakdown = {
+    roles: roleResult.score,
+
+    curve:
+      scoreManaCurve(cards),
+
+    mechanics:
+      scoreMechanicBalance(
+        cards
+      ),
+
+    packages:
+      scorePackageCompleteness(
+        cards
+      ),
+
+    commander:
+      scoreCommanderAlignment(
+        cards,
+        commanderProfile,
+        theme
+      ),
+  };
+
+  const total =
+    Object.values(
+      breakdown
+    ).reduce(
+      (sum, value) =>
+        sum + value,
+      0
+    );
+
+  return {
+    total,
+    breakdown,
+    roleCounts:
+      roleResult.counts,
+  };
+}
+
+// ---------- SWAPS ----------
+function cardPurchasePrice(
+  card,
+  collectionCounts
+) {
+  if (
+    collectionCounts?.has(
+      normalizeCardName(
+        card.name
+      )
+    )
+  ) {
+    return 0;
+  }
+
+  return (
+    Number.parseFloat(
+      card.prices?.usd || "0"
+    ) || 0
+  );
+}
+
+function assignBestRoleForDeck(
+  card,
+  cardsWithoutCandidate,
+  roleTargets
+) {
+  const counts =
+    countDeckRoles(
+      cardsWithoutCandidate
+    );
+
+  return (
+    chooseBestRole(
+      card,
+      counts,
+      roleTargets
+    ).role ||
+    "flex synergy"
+  );
+}
+
+/**
+ * Mejora un bloque no-tierra mediante
+ * intercambios uno por uno.
+ *
+ * Solo conserva cambios que aumentan
+ * la puntuación global y respeta el
+ * presupuesto configurado.
+ */
+export function improveDeckWithSwaps({
+  deck,
+  candidates,
+  roleTargets,
+  commanderProfile,
+  theme = "none",
+  collectionCounts = new Map(),
+  maxBudget = 0,
+  landCost = 0,
+  maxPasses = 4,
+  candidateLimit = 100,
+}) {
+  let currentDeck =
+    deck.map(card => ({
+      ...card,
+    }));
+
+  let currentEvaluation =
+    scoreWholeDeck({
+      cards: currentDeck,
+      roleTargets,
+      commanderProfile,
+      theme,
+    });
+
+  let currentCost =
+    landCost +
+    currentDeck.reduce(
+      (sum, card) =>
+        sum +
+        cardPurchasePrice(
+          card,
+          collectionCounts
+        ),
+      0
+    );
+
+  const selectedNames =
+    new Set(
+      currentDeck.map(card =>
+        normalizeCardName(
+          card.name
+        )
+      )
+    );
+
+  let excluded =
+    candidates
+      .filter(
+        card =>
+          !selectedNames.has(
+            normalizeCardName(
+              card.name
+            )
+          )
+      )
+      .slice(0, candidateLimit)
+      .map(card => ({
+        ...card,
+      }));
+
+  let swaps = 0;
+
+  for (
+    let pass = 0;
+    pass < maxPasses;
+    pass++
+  ) {
+    let bestSwap = null;
+
+    for (
+      let deckIndex = 0;
+      deckIndex <
+      currentDeck.length;
+      deckIndex++
+    ) {
+      const removed =
+        currentDeck[deckIndex];
+
+      const removedPrice =
+        cardPurchasePrice(
+          removed,
+          collectionCounts
+        );
+
+      const withoutRemoved =
+        currentDeck.filter(
+          (_, index) =>
+            index !== deckIndex
+        );
+
+      for (
+        let candidateIndex = 0;
+        candidateIndex <
+        excluded.length;
+        candidateIndex++
+      ) {
+        const addedBase =
+          excluded[
+            candidateIndex
+          ];
+
+        const addedPrice =
+          cardPurchasePrice(
+            addedBase,
+            collectionCounts
+          );
+
+        const candidateCost =
+          currentCost -
+          removedPrice +
+          addedPrice;
+
+        if (
+          maxBudget > 0 &&
+          candidateCost >
+            maxBudget
+        ) {
+          continue;
+        }
+
+        const added = {
+          ...addedBase,
+
+          _assignedRole:
+            assignBestRoleForDeck(
+              addedBase,
+              withoutRemoved,
+              roleTargets
+            ),
+        };
+
+        const candidateDeck = [
+          ...withoutRemoved,
+          added,
+        ];
+
+        const evaluation =
+          scoreWholeDeck({
+            cards:
+              candidateDeck,
+            roleTargets,
+            commanderProfile,
+            theme,
+          });
+
+        const improvement =
+          evaluation.total -
+          currentEvaluation.total;
+
+        if (
+          improvement > 0.25 &&
+          (
+            !bestSwap ||
+            improvement >
+              bestSwap.improvement
+          )
+        ) {
+          bestSwap = {
+            deckIndex,
+            candidateIndex,
+            removed,
+            added,
+            candidateCost,
+            evaluation,
+            improvement,
+          };
+        }
+      }
+    }
+
+    if (!bestSwap) {
+      break;
+    }
+
+    currentDeck[
+      bestSwap.deckIndex
+    ] = bestSwap.added;
+
+    excluded[
+      bestSwap.candidateIndex
+    ] = bestSwap.removed;
+
+    currentCost =
+      bestSwap.candidateCost;
+
+    currentEvaluation =
+      bestSwap.evaluation;
+
+    swaps++;
+  }
+
+  return {
+    cards: currentDeck,
     cost: currentCost,
-    roleCounts
+    score:
+      currentEvaluation.total,
+
+    scoreBreakdown:
+      currentEvaluation.breakdown,
+
+    roleCounts:
+      currentEvaluation.roleCounts,
+
+    swaps,
   };
 }

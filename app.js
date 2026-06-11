@@ -1,36 +1,42 @@
-console.log("app.js starting to load...");
+console.log("[v0] app.js starting to load...");
 
 import {
   buildConsistentNonLandDeck,
+  improveDeckWithSwaps,
+  scoreWholeDeck,
   buildCommanderSynergyMap,
   buildCooccurrenceMap,
   computeDeckSynergyMap,
   normalizeCardName,
   computeCardScore,
-  getCardTags,
   analyzeCommander,
 } from "./scoring.js";
 
-const SCRYFALL_BASE = 'https://api.scryfall.com';
+const SCRYFALL_BASE = "https://api.scryfall.com";
+
+let lastGeneratedDeck = null;
+let lastGeneratedCommander = null;
 
 // ---------- TOOLTIP ----------
 let tooltip = null;
 let tooltipImg = null;
 
-if (typeof document !== 'undefined') {
-  tooltip = document.createElement('div');
-  tooltip.id = 'card-tooltip';
+if (typeof document !== "undefined") {
+  tooltip = document.createElement("div");
+  tooltip.id = "card-tooltip";
 
-  tooltipImg = document.createElement('img');
-  tooltipImg.id = 'card-tooltip-img';
-  tooltipImg.alt = '';
+  tooltipImg = document.createElement("img");
+  tooltipImg.id = "card-tooltip-img";
+  tooltipImg.alt = "";
 
   tooltip.appendChild(tooltipImg);
   document.body.appendChild(tooltip);
 }
 
 function getCardImageUrl(card) {
-  if (!card) return null;
+  if (!card) {
+    return null;
+  }
 
   if (card.image_uris?.normal) {
     return card.image_uris.normal;
@@ -51,29 +57,45 @@ function showTooltip(card) {
   }
 
   tooltipImg.src = url;
-  tooltip.classList.add('visible');
+  tooltip.classList.add("visible");
 }
 
 function moveTooltip(event) {
-  if (!tooltip) return;
+  if (!tooltip) {
+    return;
+  }
 
   const padding = 18;
   const tooltipWidth = 234;
   const tooltipHeight = 326;
 
   let x = event.clientX + padding;
-  let y = event.clientY - Math.round(tooltipHeight / 2);
+  let y =
+    event.clientY -
+    Math.round(tooltipHeight / 2);
 
-  if (x + tooltipWidth > window.innerWidth) {
-    x = event.clientX - tooltipWidth - padding;
+  if (
+    x + tooltipWidth >
+    window.innerWidth
+  ) {
+    x =
+      event.clientX -
+      tooltipWidth -
+      padding;
   }
 
   if (y < 4) {
     y = 4;
   }
 
-  if (y + tooltipHeight > window.innerHeight - 4) {
-    y = window.innerHeight - tooltipHeight - 4;
+  if (
+    y + tooltipHeight >
+    window.innerHeight - 4
+  ) {
+    y =
+      window.innerHeight -
+      tooltipHeight -
+      4;
   }
 
   tooltip.style.left = `${x}px`;
@@ -81,26 +103,35 @@ function moveTooltip(event) {
 }
 
 function hideTooltip() {
-  if (!tooltip) return;
-  tooltip.classList.remove('visible');
+  if (!tooltip) {
+    return;
+  }
+
+  tooltip.classList.remove("visible");
 }
 
-if (typeof document !== 'undefined') {
-  document.addEventListener('mousemove', moveTooltip);
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "mousemove",
+    moveTooltip
+  );
 }
 
 // ---------- COLECCIÓN ----------
 export function parseCollection(input) {
   const counts = new Map();
 
-  for (const rawLine of input.split('\n')) {
+  for (const rawLine of input.split("\n")) {
     const line = rawLine.trim();
 
     if (!line) {
       continue;
     }
 
-    const match = line.match(/^(\d+)\s*x?\s+(.+)$/i);
+    const match = line.match(
+      /^(\d+)\s*x?\s+(.+)$/i
+    );
+
     const quantity = match
       ? Number.parseInt(match[1], 10)
       : 1;
@@ -109,75 +140,109 @@ export function parseCollection(input) {
       ? match[2]
       : line;
 
-    const canonicalName = name.trim().toLowerCase();
-    const normalizedName = normalizeCardName(name);
+    const canonicalName = name
+      .trim()
+      .toLowerCase();
+
+    const normalizedName =
+      normalizeCardName(name);
 
     if (!canonicalName) {
       continue;
     }
 
-    const validQuantity = Math.max(quantity, 1);
+    const validQuantity = Math.max(
+      quantity,
+      1
+    );
 
     counts.set(
       canonicalName,
-      (counts.get(canonicalName) ?? 0) + validQuantity
+      (counts.get(canonicalName) ?? 0) +
+        validQuantity
     );
 
     counts.set(
       normalizedName,
-      (counts.get(normalizedName) ?? 0) + validQuantity
+      (counts.get(normalizedName) ?? 0) +
+        validQuantity
     );
   }
 
   return counts;
 }
 
-export function sortRecommendations(cards, collection) {
+export function sortRecommendations(
+  cards,
+  collection
+) {
   const normalizedName = card =>
     normalizeCardName(card.name);
 
   const canonicalName = card =>
-    (card.name || '').trim().toLowerCase();
+    (card.name || "")
+      .trim()
+      .toLowerCase();
 
-  return [...cards].sort((cardA, cardB) => {
-    const cardAOwned =
-      collection &&
-      (
-        collection.has(normalizedName(cardA)) ||
-        collection.has(canonicalName(cardA))
-      )
-        ? 0
-        : 1;
+  return [...cards].sort(
+    (cardA, cardB) => {
+      const cardAOwned =
+        collection &&
+        (
+          collection.has(
+            normalizedName(cardA)
+          ) ||
+          collection.has(
+            canonicalName(cardA)
+          )
+        )
+          ? 0
+          : 1;
 
-    const cardBOwned =
-      collection &&
-      (
-        collection.has(normalizedName(cardB)) ||
-        collection.has(canonicalName(cardB))
-      )
-        ? 0
-        : 1;
+      const cardBOwned =
+        collection &&
+        (
+          collection.has(
+            normalizedName(cardB)
+          ) ||
+          collection.has(
+            canonicalName(cardB)
+          )
+        )
+          ? 0
+          : 1;
 
-    if (cardAOwned !== cardBOwned) {
-      return cardAOwned - cardBOwned;
+      if (cardAOwned !== cardBOwned) {
+        return cardAOwned - cardBOwned;
+      }
+
+      const cardARank =
+        Number.isFinite(
+          cardA.edhrec_rank
+        )
+          ? cardA.edhrec_rank
+          : Number.MAX_SAFE_INTEGER;
+
+      const cardBRank =
+        Number.isFinite(
+          cardB.edhrec_rank
+        )
+          ? cardB.edhrec_rank
+          : Number.MAX_SAFE_INTEGER;
+
+      return cardARank - cardBRank;
     }
-
-    const cardARank = Number.isFinite(cardA.edhrec_rank)
-      ? cardA.edhrec_rank
-      : Number.MAX_SAFE_INTEGER;
-
-    const cardBRank = Number.isFinite(cardB.edhrec_rank)
-      ? cardB.edhrec_rank
-      : Number.MAX_SAFE_INTEGER;
-
-    return cardARank - cardBRank;
-  });
+  );
 }
 
 // ---------- SCRYFALL ----------
-async function fetchCommander(commanderName) {
+async function fetchCommander(
+  commanderName
+) {
   const response = await fetch(
-    `${SCRYFALL_BASE}/cards/named?exact=${encodeURIComponent(commanderName)}`
+    `${SCRYFALL_BASE}/cards/named?exact=${encodeURIComponent(
+      commanderName
+    )}`
   );
 
   const data = await response.json();
@@ -185,16 +250,16 @@ async function fetchCommander(commanderName) {
   if (!response.ok) {
     throw new Error(
       data?.details ||
-      'No se pudo encontrar el comandante.'
+        "No se pudo encontrar el comandante."
     );
   }
 
   if (
     !data.legalities ||
-    data.legalities.commander !== 'legal'
+    data.legalities.commander !== "legal"
   ) {
     throw new Error(
-      'La carta indicada no es legal como comandante en Commander.'
+      "La carta indicada no es legal como comandante en Commander."
     );
   }
 
@@ -205,25 +270,35 @@ async function fetchCandidates(
   colorIdentity,
   commanderProfile
 ) {
-  const identity = colorIdentity.length
-    ? colorIdentity.join('')
-    : 'c';
+  const identity =
+    colorIdentity.length > 0
+      ? colorIdentity.join("")
+      : "c";
 
   const baseQuery =
-    `format:commander game:paper unique:cards ` +
-    `-type:basic identity<=${identity}`;
+    "format:commander game:paper " +
+    "unique:cards -type:basic " +
+    `identity<=${identity}`;
 
   const extraFilters = [];
 
   if (commanderProfile) {
-    if (commanderProfile.tribes.has('ally')) {
-      extraFilters.push('o:ally');
+    if (
+      commanderProfile.tribes.has(
+        "ally"
+      )
+    ) {
+      extraFilters.push("o:ally");
     }
 
     const tribeTerms = [
       ...commanderProfile.tribes
     ]
-      .filter(tribe => tribe && tribe !== 'ally')
+      .filter(
+        tribe =>
+          tribe &&
+          tribe !== "ally"
+      )
       .slice(0, 3);
 
     for (const tribe of tribeTerms) {
@@ -233,7 +308,9 @@ async function fetchCandidates(
     }
 
     if (
-      commanderProfile.mechanics.has('tokens')
+      commanderProfile.mechanics.has(
+        "tokens"
+      )
     ) {
       extraFilters.push(
         '(o:token OR o:"create token")'
@@ -241,36 +318,47 @@ async function fetchCandidates(
     }
 
     if (
-      commanderProfile.mechanics.has('graveyard')
+      commanderProfile.mechanics.has(
+        "graveyard"
+      )
     ) {
       extraFilters.push(
-        '(o:graveyard OR o:reanimate OR ' +
-        'o:flashback OR o:unearth)'
+        "(o:graveyard OR o:reanimate " +
+          "OR o:flashback OR o:unearth)"
       );
     }
 
     if (
-      commanderProfile.mechanics.has('spells')
+      commanderProfile.mechanics.has(
+        "spells"
+      )
     ) {
       extraFilters.push(
-        '(o:instant OR o:sorcery OR ' +
-        'o:"copy target spell" OR ' +
-        'o:magecraft OR o:spellslinger)'
+        "(o:instant OR o:sorcery " +
+          'OR o:"copy target spell" ' +
+          "OR o:magecraft " +
+          "OR o:spellslinger)"
       );
     }
 
     if (
-      commanderProfile.mechanics.has('equipment')
+      commanderProfile.mechanics.has(
+        "equipment"
+      )
     ) {
       extraFilters.push(
-        '(type:equipment OR o:equip OR o:equipment)'
+        "(type:equipment " +
+          "OR o:equip " +
+          "OR o:equipment)"
       );
     }
 
     if (
-      commanderProfile.mechanics.has('landfall')
+      commanderProfile.mechanics.has(
+        "landfall"
+      )
     ) {
-      extraFilters.push('o:landfall');
+      extraFilters.push("o:landfall");
     }
   }
 
@@ -278,7 +366,9 @@ async function fetchCandidates(
 
   if (extraFilters.length > 0) {
     queries.push(
-      `${baseQuery} ${extraFilters.join(' ')}`
+      `${baseQuery} ${extraFilters.join(
+        " "
+      )}`
     );
   }
 
@@ -292,12 +382,13 @@ async function fetchCandidates(
   ) {
     let url =
       `${SCRYFALL_BASE}/cards/search?` +
-      `q=${encodeURIComponent(queries[queryIndex])}` +
-      '&order=edhrec&dir=asc';
+      `q=${encodeURIComponent(
+        queries[queryIndex]
+      )}` +
+      "&order=edhrec&dir=asc";
 
-    const pageLimit = queryIndex === 0
-      ? 3
-      : 2;
+    const pageLimit =
+      queryIndex === 0 ? 3 : 2;
 
     for (
       let pageIndex = 0;
@@ -308,8 +399,11 @@ async function fetchCandidates(
         break;
       }
 
-      const response = await fetch(url);
-      const data = await response.json();
+      const response =
+        await fetch(url);
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
         if (cards.length > 0) {
@@ -317,14 +411,16 @@ async function fetchCandidates(
         }
 
         throw new Error(
-          data?.details || 'Error en Scryfall.'
+          data?.details ||
+            "Error en Scryfall."
         );
       }
 
       for (
         const card of data.data.filter(
           candidate =>
-            candidate.layout !== 'art_series'
+            candidate.layout !==
+            "art_series"
         )
       ) {
         if (!cardIds.has(card.id)) {
@@ -348,23 +444,28 @@ async function fetchCandidates(
   return cards;
 }
 
+// ---------- TIERRAS BÁSICAS ----------
 const COLOR_TO_BASIC = {
-  W: 'Plains',
-  U: 'Island',
-  B: 'Swamp',
-  R: 'Mountain',
-  G: 'Forest'
+  W: "Plains",
+  U: "Island",
+  B: "Swamp",
+  R: "Mountain",
+  G: "Forest"
 };
 
-async function fetchBasicLands(colorIdentity) {
+async function fetchBasicLands(
+  colorIdentity
+) {
   const basicLands = [];
 
-  const colors = colorIdentity.length
-    ? colorIdentity
-    : ['W'];
+  const colors =
+    colorIdentity.length > 0
+      ? colorIdentity
+      : ["W"];
 
   for (const color of colors) {
-    const basicLandName = COLOR_TO_BASIC[color];
+    const basicLandName =
+      COLOR_TO_BASIC[color];
 
     if (!basicLandName) {
       continue;
@@ -373,27 +474,35 @@ async function fetchBasicLands(colorIdentity) {
     try {
       const response = await fetch(
         `${SCRYFALL_BASE}/cards/named?` +
-        `exact=${encodeURIComponent(basicLandName)}`
+          `exact=${encodeURIComponent(
+            basicLandName
+          )}`
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (response.ok) {
         data._isBasicLand = true;
         data._basicColor = color;
+
         basicLands.push(data);
       }
     } catch {
-      // Se ignoran errores de tierras individuales.
+      // Se ignoran errores individuales.
     }
   }
 
   return basicLands;
 }
 
-async function fetchTaggerTags(scryfallId) {
+// ---------- TAGGER ----------
+async function fetchTaggerTags(
+  scryfallId
+) {
   try {
-    const controller = new AbortController();
+    const controller =
+      new AbortController();
 
     const timeoutId = setTimeout(
       () => controller.abort(),
@@ -413,11 +522,14 @@ async function fetchTaggerTags(scryfallId) {
       return [];
     }
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
     return (data.data || [])
-      .map(tagData =>
-        tagData.tag?.toLowerCase?.() || ''
+      .map(
+        tagData =>
+          tagData.tag?.toLowerCase?.() ||
+          ""
       )
       .filter(Boolean);
   } catch {
@@ -425,44 +537,60 @@ async function fetchTaggerTags(scryfallId) {
   }
 }
 
-async function buildCommanderProfile(commander) {
-  const profile = analyzeCommander(commander);
-  const tags = await fetchTaggerTags(commander.id);
+async function buildCommanderProfile(
+  commander
+) {
+  const profile =
+    analyzeCommander(commander);
+
+  const tags =
+    await fetchTaggerTags(
+      commander.id
+    );
 
   for (const tag of tags) {
-    if (tag.startsWith('creature-type-')) {
+    if (
+      tag.startsWith(
+        "creature-type-"
+      )
+    ) {
       profile.tribes.add(
         tag
-          .replace('creature-type-', '')
-          .replace(/-/g, ' ')
+          .replace(
+            "creature-type-",
+            ""
+          )
+          .replace(/-/g, " ")
       );
 
-      profile.careAboutCreatureType = true;
+      profile.careAboutCreatureType =
+        true;
     }
 
     const mechanicMap = {
-      token: 'tokens',
-      counter: 'counters',
-      graveyard: 'graveyard',
-      sacrifice: 'sacrifice',
-      etb: 'etb',
-      blink: 'blink',
-      equipment: 'equipment',
-      aura: 'auras',
-      lifegain: 'lifegain',
-      spellslinger: 'spells',
-      spells: 'spells',
-      artifact: 'artifacts',
-      enchantment: 'enchantments',
-      landfall: 'landfall',
-      voltron: 'equipment',
-      reanimator: 'graveyard',
-      aristocrats: 'sacrifice',
-      treasure: 'treasure'
+      token: "tokens",
+      counter: "counters",
+      graveyard: "graveyard",
+      sacrifice: "sacrifice",
+      etb: "etb",
+      blink: "blink",
+      equipment: "equipment",
+      aura: "auras",
+      lifegain: "lifegain",
+      spellslinger: "spells",
+      spells: "spells",
+      artifact: "artifacts",
+      enchantment: "enchantments",
+      landfall: "landfall",
+      voltron: "equipment",
+      reanimator: "graveyard",
+      aristocrats: "sacrifice",
+      treasure: "treasure"
     };
 
     for (
-      const [key, group] of Object.entries(
+      const [key, group]
+      of Object.entries(
         mechanicMap
       )
     ) {
@@ -473,47 +601,69 @@ async function buildCommanderProfile(commander) {
   }
 
   profile.careAboutTokens =
-    profile.mechanics.has('tokens');
+    profile.mechanics.has("tokens");
 
   profile.careAboutCounters =
-    profile.mechanics.has('counters');
+    profile.mechanics.has(
+      "counters"
+    );
 
   profile.careAboutGraveyard =
-    profile.mechanics.has('graveyard');
+    profile.mechanics.has(
+      "graveyard"
+    );
 
   profile.careAboutSacrifice =
-    profile.mechanics.has('sacrifice');
+    profile.mechanics.has(
+      "sacrifice"
+    );
 
   profile.careAboutETB =
-    profile.mechanics.has('etb') ||
-    profile.mechanics.has('blink');
+    profile.mechanics.has("etb") ||
+    profile.mechanics.has("blink");
 
   profile.careAboutArtifacts =
-    profile.mechanics.has('artifacts') ||
-    profile.mechanics.has('treasure');
+    profile.mechanics.has(
+      "artifacts"
+    ) ||
+    profile.mechanics.has(
+      "treasure"
+    );
 
   profile.careAboutEnchantments =
-    profile.mechanics.has('enchantments');
+    profile.mechanics.has(
+      "enchantments"
+    );
 
   profile.careAboutLandfall =
-    profile.mechanics.has('landfall');
+    profile.mechanics.has(
+      "landfall"
+    );
 
   profile.careAboutLifegain =
-    profile.mechanics.has('lifegain');
+    profile.mechanics.has(
+      "lifegain"
+    );
 
   profile.careAboutSpells =
-    profile.mechanics.has('spells');
+    profile.mechanics.has("spells");
 
   profile.careAboutEquipment =
-    profile.mechanics.has('equipment') ||
-    profile.mechanics.has('auras');
+    profile.mechanics.has(
+      "equipment"
+    ) ||
+    profile.mechanics.has("auras");
 
   return profile;
 }
 
-async function fetchEdhrecData(commanderName) {
+// ---------- EDHREC LOCAL ----------
+async function fetchEdhrecData(
+  commanderName
+) {
   try {
-    const controller = new AbortController();
+    const controller =
+      new AbortController();
 
     const timeoutId = setTimeout(
       () => controller.abort(),
@@ -521,8 +671,10 @@ async function fetchEdhrecData(commanderName) {
     );
 
     const response = await fetch(
-      `http://localhost:8000/api/commander/` +
-      encodeURIComponent(commanderName),
+      "http://localhost:8000/api/commander/" +
+        encodeURIComponent(
+          commanderName
+        ),
       {
         signal: controller.signal
       }
@@ -543,57 +695,70 @@ async function fetchEdhrecData(commanderName) {
 // ---------- RENDER ----------
 const ROLE_META = {
   land: {
-    label: 'Tierras',
-    color: '#4ade80',
-    icon: '🌲'
+    label: "Tierras",
+    color: "#4ade80",
+    icon: "🌲"
   },
+
   ramp: {
-    label: 'Ramp',
-    color: '#facc15',
-    icon: '⚡'
+    label: "Ramp",
+    color: "#facc15",
+    icon: "⚡"
   },
+
   draw: {
-    label: 'Robo de cartas',
-    color: '#60a5fa',
-    icon: '📖'
+    label: "Robo de cartas",
+    color: "#60a5fa",
+    icon: "📖"
   },
+
   removal: {
-    label: 'Removal',
-    color: '#f87171',
-    icon: '⚔️'
+    label: "Removal",
+    color: "#f87171",
+    icon: "⚔️"
   },
+
   wipe: {
-    label: 'Limpiamesas',
-    color: '#c084fc',
-    icon: '💥'
+    label: "Limpiamesas",
+    color: "#c084fc",
+    icon: "💥"
   },
+
   tutor: {
-    label: 'Tutores',
-    color: '#fb923c',
-    icon: '🔍'
+    label: "Tutores",
+    color: "#fb923c",
+    icon: "🔍"
   },
+
   protection: {
-    label: 'Protección',
-    color: '#34d399',
-    icon: '🛡️'
+    label: "Protección",
+    color: "#34d399",
+    icon: "🛡️"
   },
+
   recursion: {
-    label: 'Recursión',
-    color: '#a78bfa',
-    icon: '♻️'
+    label: "Recursión",
+    color: "#a78bfa",
+    icon: "♻️"
   },
-  'flex synergy': {
-    label: 'Sinergia / Flex',
-    color: '#e2e8f0',
-    icon: '✨'
+
+  "flex synergy": {
+    label: "Sinergia / Flex",
+    color: "#e2e8f0",
+    icon: "✨"
   }
 };
 
-function createBadge(text, className) {
-  const badge = document.createElement('span');
+function createBadge(
+  text,
+  className
+) {
+  const badge =
+    document.createElement("span");
 
   badge.textContent = text;
-  badge.className = `badge ${className}`;
+  badge.className =
+    `badge ${className}`;
 
   return badge;
 }
@@ -604,35 +769,37 @@ function renderRecommendations(
   scoringContext,
   availableNorms
 ) {
-  const list = document.getElementById(
-    'recommendations'
-  );
+  const list =
+    document.getElementById(
+      "recommendations"
+    );
 
   list.replaceChildren();
 
   const groups = new Map();
 
   const roleOrder = [
-    'land',
-    'ramp',
-    'draw',
-    'removal',
-    'wipe',
-    'tutor',
-    'protection',
-    'recursion',
-    'flex synergy'
+    "land",
+    "ramp",
+    "draw",
+    "removal",
+    "wipe",
+    "tutor",
+    "protection",
+    "recursion",
+    "flex synergy"
   ];
 
   for (const card of deck) {
     let role =
-      card._assignedRole || 'flex synergy';
+      card._assignedRole ||
+      "flex synergy";
 
     if (
-      role === 'flex fallback' ||
-      role === 'flex'
+      role === "flex fallback" ||
+      role === "flex"
     ) {
-      role = 'flex synergy';
+      role = "flex synergy";
     }
 
     if (!groups.has(role)) {
@@ -651,74 +818,99 @@ function renderRecommendations(
 
     const meta =
       ROLE_META[role] ||
-      ROLE_META['flex synergy'];
+      ROLE_META["flex synergy"];
 
-    const header = document.createElement('li');
+    const header =
+      document.createElement("li");
 
-    header.className = 'category-header';
+    header.className =
+      "category-header";
 
     header.style.setProperty(
-      '--cat-color',
+      "--cat-color",
       meta.color
     );
 
     header.innerHTML =
-      `<span class="cat-icon">${meta.icon}</span>` +
-      `<span class="cat-label">${meta.label}</span>` +
+      `<span class="cat-icon">` +
+      `${meta.icon}</span>` +
+      `<span class="cat-label">` +
+      `${meta.label}</span>` +
       `<span class="cat-count">` +
-      `${cards.length} cartas` +
-      `</span>`;
+      `${cards.length} cartas</span>`;
 
     list.appendChild(header);
 
     for (const card of cards) {
-      const owned = collectionCounts.has(
-        normalizeCardName(card.name)
-      );
+      const owned =
+        collectionCounts.has(
+          normalizeCardName(
+            card.name
+          )
+        );
 
-      const finalScore = computeCardScore({
-        card,
-        collectionCounts,
-        availableNorms,
-        ...scoringContext
-      });
+      const finalScore =
+        computeCardScore({
+          card,
+          collectionCounts,
+          availableNorms,
+          ...scoringContext
+        });
 
-      const item = document.createElement('li');
+      const item =
+        document.createElement("li");
 
-      item.className = 'card-item';
+      item.className = "card-item";
 
       item.style.setProperty(
-        '--cat-color',
+        "--cat-color",
         meta.color
       );
 
       const nameSpan =
-        document.createElement('span');
+        document.createElement(
+          "span"
+        );
 
-      nameSpan.className = 'card-name';
-      nameSpan.textContent = card.name;
+      nameSpan.className =
+        "card-name";
+
+      nameSpan.textContent =
+        card.name;
 
       const scoreSpan =
-        document.createElement('span');
+        document.createElement(
+          "span"
+        );
 
-      scoreSpan.className = 'card-score';
+      scoreSpan.className =
+        "card-score";
 
       scoreSpan.textContent =
-        `${Math.round(finalScore)} pts`;
+        `${Math.round(
+          finalScore
+        )} pts`;
 
       const right =
-        document.createElement('span');
+        document.createElement(
+          "span"
+        );
 
-      right.className = 'card-right';
+      right.className =
+        "card-right";
 
-      right.appendChild(scoreSpan);
+      right.appendChild(
+        scoreSpan
+      );
 
       right.appendChild(
         createBadge(
-          owned ? 'En colección' : 'Falta',
           owned
-            ? 'badge-owned'
-            : 'badge-missing'
+            ? "En colección"
+            : "Falta",
+          owned
+            ? "badge-owned"
+            : "badge-missing"
         )
       );
 
@@ -727,12 +919,12 @@ function renderRecommendations(
 
       if (getCardImageUrl(card)) {
         item.addEventListener(
-          'mouseenter',
+          "mouseenter",
           () => showTooltip(card)
         );
 
         item.addEventListener(
-          'mouseleave',
+          "mouseleave",
           hideTooltip
         );
       }
@@ -744,7 +936,7 @@ function renderRecommendations(
   return deck;
 }
 
-// ---------- CONSTRUCTOR DEL MAZO ----------
+// ---------- CONSTRUCCIÓN DE TIERRAS ----------
 function chooseLandPackage(
   orderedLands,
   basicLands,
@@ -756,39 +948,51 @@ function chooseLandPackage(
   let cost = 0;
 
   const colorCount =
-    (templates._colors || []).length || 1;
+    (templates._colors || [])
+      .length || 1;
 
   const basicLandSlots = Math.min(
     templates.land,
     Math.max(
       colorCount * 3,
-      Math.floor(templates.land * 0.30)
+      Math.floor(
+        templates.land * 0.3
+      )
     )
   );
 
-  const nonBasicLandSlots = Math.max(
-    0,
-    templates.land - basicLandSlots
-  );
+  const nonBasicLandSlots =
+    Math.max(
+      0,
+      templates.land -
+        basicLandSlots
+    );
 
-  for (const originalCard of orderedLands) {
+  for (
+    const originalCard
+    of orderedLands
+  ) {
     if (
-      selectedLands.length >= nonBasicLandSlots
+      selectedLands.length >=
+      nonBasicLandSlots
     ) {
       break;
     }
 
-    const normalizedName = normalizeCardName(
-      originalCard.name
-    );
+    const normalizedName =
+      normalizeCardName(
+        originalCard.name
+      );
 
-    const price = collectionCounts.has(
-      normalizedName
-    )
-      ? 0
-      : Number.parseFloat(
-          originalCard.prices?.usd || '0'
-        ) || 0;
+    const price =
+      collectionCounts.has(
+        normalizedName
+      )
+        ? 0
+        : Number.parseFloat(
+            originalCard.prices
+              ?.usd || "0"
+          ) || 0;
 
     if (price > maxPriceLimit) {
       continue;
@@ -796,14 +1000,15 @@ function chooseLandPackage(
 
     if (
       templates.maxBudget > 0 &&
-      cost + price > templates.maxBudget
+      cost + price >
+        templates.maxBudget
     ) {
       continue;
     }
 
     selectedLands.push({
       ...originalCard,
-      _assignedRole: 'land'
+      _assignedRole: "land"
     });
 
     cost += price;
@@ -813,33 +1018,37 @@ function chooseLandPackage(
     let basicIndex = 0;
 
     while (
-      selectedLands.length < templates.land
+      selectedLands.length <
+      templates.land
     ) {
       const basicLand =
         basicLands[
-          basicIndex % basicLands.length
+          basicIndex %
+            basicLands.length
         ];
 
       selectedLands.push({
         ...basicLand,
-        _assignedRole: 'land'
+        _assignedRole: "land"
       });
 
       basicIndex++;
     }
   } else {
     while (
-      selectedLands.length < templates.land
+      selectedLands.length <
+      templates.land
     ) {
       selectedLands.push({
-        name: 'Tierra básica',
-        type_line: 'Basic Land',
-        oracle_text: '',
-        _assignedRole: 'land',
+        name: "Basic Land",
+        type_line: "Basic Land",
+        oracle_text: "",
+        mana_cost: "",
+        cmc: 0,
         prices: {
-          usd: '0'
+          usd: "0"
         },
-        cmc: 0
+        _assignedRole: "land"
       });
     }
   }
@@ -850,6 +1059,7 @@ function chooseLandPackage(
   };
 }
 
+// ---------- CONSTRUCTOR DE MAZO ----------
 function buildDeckByTemplate({
   nonLandCandidates,
   orderedLands,
@@ -858,10 +1068,11 @@ function buildDeckByTemplate({
   collectionCounts,
   scoring
 }) {
-  const nonLandTarget = Math.max(
-    0,
-    99 - templates.land
-  );
+  const nonLandTarget =
+    Math.max(
+      0,
+      99 - templates.land
+    );
 
   const attemptCount =
     templates.maxBudget > 0
@@ -871,7 +1082,8 @@ function buildDeckByTemplate({
   let maxPriceLimit =
     templates.maxBudget > 0
       ? Math.max(
-          templates.maxBudget * 0.20,
+          templates.maxBudget *
+            0.2,
           2
         )
       : Infinity;
@@ -883,18 +1095,20 @@ function buildDeckByTemplate({
     attempt < attemptCount;
     attempt++
   ) {
-    const landPackage = chooseLandPackage(
-      orderedLands,
-      basicLands,
-      templates,
-      collectionCounts,
-      maxPriceLimit
-    );
+    const landPackage =
+      chooseLandPackage(
+        orderedLands,
+        basicLands,
+        templates,
+        collectionCounts,
+        maxPriceLimit
+      );
 
     const nonLandPackage =
       buildConsistentNonLandDeck({
         cards: nonLandCandidates,
-        targetCount: nonLandTarget,
+        targetCount:
+          nonLandTarget,
         roleTargets: templates,
         collectionCounts,
         commanderProfile:
@@ -904,9 +1118,12 @@ function buildDeckByTemplate({
         cooccurrenceMap:
           scoring.cooccurrenceMap,
         theme: scoring.theme,
-        commander: scoring.commander,
-        maxBudget: templates.maxBudget,
-        startingCost: landPackage.cost,
+        commander:
+          scoring.commander,
+        maxBudget:
+          templates.maxBudget,
+        startingCost:
+          landPackage.cost,
         maxPriceLimit
       });
 
@@ -918,19 +1135,26 @@ function buildDeckByTemplate({
     const totalCmc =
       nonLandPackage.cards.reduce(
         (sum, card) =>
-          sum + (Number(card.cmc) || 0),
+          sum +
+          (Number(card.cmc) || 0),
         0
       );
 
     const result = {
       cards,
+
       stats: {
-        cost: nonLandPackage.cost,
+        cost:
+          nonLandPackage.cost,
+
         avgCmc:
-          nonLandPackage.cards.length > 0
+          nonLandPackage.cards.length >
+          0
             ? totalCmc /
-              nonLandPackage.cards.length
+              nonLandPackage.cards
+                .length
             : 0,
+
         roleCounts:
           nonLandPackage.roleCounts
       }
@@ -961,104 +1185,238 @@ function buildDeckByTemplate({
   return bestResult;
 }
 
+// ---------- EXPORTACIÓN ----------
+export function formatDeckList(
+  commander,
+  cards
+) {
+  const counts = new Map();
+
+  for (const card of cards) {
+    const name =
+      card.name ||
+      "Carta sin nombre";
+
+    counts.set(
+      name,
+      (counts.get(name) || 0) + 1
+    );
+  }
+
+  const lines = [
+    `1 ${commander.name}`,
+    "",
+    "// Mazo"
+  ];
+
+  const orderedEntries = [
+    ...counts.entries()
+  ].sort(
+    (entryA, entryB) =>
+      entryA[0].localeCompare(
+        entryB[0]
+      )
+  );
+
+  for (
+    const [name, quantity]
+    of orderedEntries
+  ) {
+    lines.push(
+      `${quantity} ${name}`
+    );
+  }
+
+  return lines.join("\n");
+}
+
+function exportCurrentDeck() {
+  if (
+    !lastGeneratedDeck ||
+    !lastGeneratedCommander
+  ) {
+    return;
+  }
+
+  const content = formatDeckList(
+    lastGeneratedCommander,
+    lastGeneratedDeck
+  );
+
+  const blob = new Blob(
+    [content],
+    {
+      type:
+        "text/plain;charset=utf-8"
+    }
+  );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  const safeName =
+    lastGeneratedCommander.name
+      .replace(
+        /[^a-z0-9]+/gi,
+        "-"
+      )
+      .replace(
+        /^-|-$/g,
+        ""
+      )
+      .toLowerCase();
+
+  link.href = url;
+
+  link.download =
+    `${safeName || "commander"}` +
+    "-deck.txt";
+
+  document.body.appendChild(link);
+
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+
 function updateText(id, text) {
-  const element = document.getElementById(id);
+  const element =
+    document.getElementById(id);
 
   if (element) {
     element.textContent = text;
   }
 }
 
-// ---------- ENVÍO DEL FORMULARIO ----------
+// ---------- FORMULARIO ----------
 async function handleSubmit(event) {
   event.preventDefault();
 
   const submitButton =
-    document.getElementById('submit-btn');
+    document.getElementById(
+      "submit-btn"
+    );
 
-  const form = event.currentTarget;
+  const exportButton =
+    document.getElementById(
+      "export-btn"
+    );
+
+  const form =
+    event.currentTarget;
 
   const commanderName =
     form.commander.value.trim();
 
   if (!commanderName) {
     updateText(
-      'status',
-      'Debes indicar un comandante.'
+      "status",
+      "Debes indicar un comandante."
     );
 
     return;
   }
 
   submitButton.disabled = true;
-  submitButton.textContent = 'Generando...';
+  submitButton.textContent =
+    "Generando...";
 
-  document.body.classList.add('loading');
+  document.body.classList.add(
+    "loading"
+  );
 
   updateText(
-    'status',
-    'Buscando comandante...'
+    "status",
+    "Buscando comandante..."
   );
 
-  updateText('summary', '');
+  updateText("summary", "");
 
   document
-    .getElementById('recommendations')
+    .getElementById(
+      "recommendations"
+    )
     .replaceChildren();
 
-  const collectionCounts = parseCollection(
-    form.collection.value
-  );
+  if (exportButton) {
+    exportButton.hidden = true;
+  }
 
-  try {
-    const commander = await fetchCommander(
-      commanderName
+  lastGeneratedDeck = null;
+  lastGeneratedCommander = null;
+
+  const collectionCounts =
+    parseCollection(
+      form.collection.value
     );
 
+  try {
+    const commander =
+      await fetchCommander(
+        commanderName
+      );
+
     updateText(
-      'status',
+      "status",
       `Comandante: ${commander.name}. ` +
-      'Analizando perfil y buscando cartas...'
+        "Analizando perfil y " +
+        "buscando cartas..."
     );
 
     const commanderProfile =
-      await buildCommanderProfile(commander);
+      await buildCommanderProfile(
+        commander
+      );
 
     const [
       candidates,
       basicLands
     ] = await Promise.all([
       fetchCandidates(
-        commander.color_identity || [],
+        commander.color_identity ||
+          [],
         commanderProfile
       ),
+
       fetchBasicLands(
-        commander.color_identity || []
+        commander.color_identity ||
+          []
       )
     ]);
 
     console.log(
-      '[perfil] Tribus:',
-      [...commanderProfile.tribes].join(', ') ||
-        'ninguna'
+      "[perfil] Tribus:",
+      [
+        ...commanderProfile.tribes
+      ].join(", ") || "ninguna"
     );
 
     console.log(
-      '[perfil] Mecánicas:',
-      [...commanderProfile.mechanics].join(', ') ||
-        'ninguna'
+      "[perfil] Mecánicas:",
+      [
+        ...commanderProfile
+          .mechanics
+      ].join(", ") || "ninguna"
     );
 
     updateText(
-      'status',
+      "status",
       `Perfil — Tribus: ${
-        [...commanderProfile.tribes]
-          .join(', ') || 'ninguna'
+        [
+          ...commanderProfile.tribes
+        ].join(", ") || "ninguna"
       } | Mecánicas: ${
-        [...commanderProfile.mechanics]
-          .join(', ') || 'ninguna'
-      } | ${candidates.length} candidatas ` +
-      'encontradas. Calculando...'
+        [
+          ...commanderProfile
+            .mechanics
+        ].join(", ") || "ninguna"
+      } | ${candidates.length} ` +
+        "candidatas encontradas. " +
+        "Calculando..."
     );
 
     const templates = {
@@ -1116,27 +1474,35 @@ async function handleSubmit(event) {
         ) || 0,
 
       _colors:
-        commander.color_identity || []
+        commander.color_identity ||
+        []
     };
 
     const withoutCommander =
       candidates.filter(
         card =>
-          card.name !== commander.name
+          card.name !==
+          commander.name
       );
 
     const landCandidates =
-      withoutCommander.filter(card =>
-        (card.type_line || '')
-          .toLowerCase()
-          .includes('land')
+      withoutCommander.filter(
+        card =>
+          (
+            card.type_line || ""
+          )
+            .toLowerCase()
+            .includes("land")
       );
 
     const nonLandCandidates =
-      withoutCommander.filter(card =>
-        !(card.type_line || '')
-          .toLowerCase()
-          .includes('land')
+      withoutCommander.filter(
+        card =>
+          !(
+            card.type_line || ""
+          )
+            .toLowerCase()
+            .includes("land")
       );
 
     const edhrecData =
@@ -1144,10 +1510,14 @@ async function handleSubmit(event) {
         commander.name
       );
 
-    const theme = form.theme.value;
+    const theme =
+      form.theme.value;
 
-    let commanderSynergyMap = new Map();
-    let cooccurrenceMap = new Map();
+    let commanderSynergyMap =
+      new Map();
+
+    let cooccurrenceMap =
+      new Map();
 
     if (edhrecData?.cardlist) {
       commanderSynergyMap =
@@ -1161,79 +1531,188 @@ async function handleSubmit(event) {
         );
     }
 
-    const allCandidateNames = new Set(
-      withoutCommander.map(card =>
-        normalizeCardName(card.name)
-      )
-    );
-
-    const emptyDeckSynergyMap = new Map();
+    const availableCandidateNames =
+      new Set(
+        withoutCommander.map(
+          card =>
+            normalizeCardName(
+              card.name
+            )
+        )
+      );
 
     const orderedLands = [
       ...landCandidates
     ].sort((cardA, cardB) => {
-      const cardBScore = computeCardScore({
-        card: cardB,
-        collectionCounts,
-        commanderProfile,
-        commanderSynergyMap,
-        deckSynergyMap:
-          emptyDeckSynergyMap,
-        cooccurrenceMap,
-        theme,
-        availableNorms:
-          allCandidateNames
-      });
+      const scoreB =
+        computeCardScore({
+          card: cardB,
+          collectionCounts,
+          commanderProfile,
+          commanderSynergyMap,
+          deckSynergyMap:
+            new Map(),
+          cooccurrenceMap,
+          theme,
+          availableNorms:
+            availableCandidateNames
+        });
 
-      const cardAScore = computeCardScore({
-        card: cardA,
-        collectionCounts,
-        commanderProfile,
-        commanderSynergyMap,
-        deckSynergyMap:
-          emptyDeckSynergyMap,
-        cooccurrenceMap,
-        theme,
-        availableNorms:
-          allCandidateNames
-      });
+      const scoreA =
+        computeCardScore({
+          card: cardA,
+          collectionCounts,
+          commanderProfile,
+          commanderSynergyMap,
+          deckSynergyMap:
+            new Map(),
+          cooccurrenceMap,
+          theme,
+          availableNorms:
+            availableCandidateNames
+        });
 
-      return cardBScore - cardAScore;
+      return scoreB - scoreA;
     });
 
-    const deckData = buildDeckByTemplate({
-      nonLandCandidates,
-      orderedLands,
-      basicLands,
-      templates,
-      collectionCounts,
-      scoring: {
-        commanderProfile,
-        commanderSynergyMap,
-        cooccurrenceMap,
-        theme,
-        commander
-      }
-    });
+    const deckData =
+      buildDeckByTemplate({
+        nonLandCandidates,
+        orderedLands,
+        basicLands,
+        templates,
+        collectionCounts,
+
+        scoring: {
+          commanderProfile,
+          commanderSynergyMap,
+          cooccurrenceMap,
+          theme,
+          commander
+        }
+      });
 
     if (!deckData) {
       throw new Error(
-        'No se pudo construir un mazo con las restricciones indicadas.'
+        "No se pudo construir el mazo."
       );
     }
 
-    const finalAvailableNames = new Set(
-      [
-        commander,
-        ...deckData.cards
-      ].map(card =>
-        normalizeCardName(card.name)
-      )
-    );
+    // ---------- SWAPS GLOBALES ----------
+    const lands =
+      deckData.cards.filter(
+        card =>
+          (
+            card.type_line || ""
+          )
+            .toLowerCase()
+            .includes("land")
+      );
+
+    const nonLands =
+      deckData.cards.filter(
+        card =>
+          !(
+            card.type_line || ""
+          )
+            .toLowerCase()
+            .includes("land")
+      );
+
+    const landCost =
+      lands.reduce(
+        (sum, card) => {
+          const normalizedName =
+            normalizeCardName(
+              card.name
+            );
+
+          if (
+            collectionCounts.has(
+              normalizedName
+            )
+          ) {
+            return sum;
+          }
+
+          return (
+            sum +
+            (
+              Number.parseFloat(
+                card.prices?.usd ||
+                  "0"
+              ) || 0
+            )
+          );
+        },
+        0
+      );
+
+    const improved =
+      improveDeckWithSwaps({
+        deck: nonLands,
+        candidates:
+          nonLandCandidates,
+        roleTargets: templates,
+        commanderProfile,
+        theme,
+        collectionCounts,
+        maxBudget:
+          templates.maxBudget,
+        landCost,
+        maxPasses: 4,
+        candidateLimit: 100
+      });
+
+    deckData.cards = [
+      ...lands,
+      ...improved.cards
+    ];
+
+    deckData.stats.cost =
+      improved.cost;
+
+    deckData.stats.roleCounts =
+      improved.roleCounts;
+
+    deckData.stats.globalScore =
+      improved.score;
+
+    deckData.stats.swaps =
+      improved.swaps;
+
+    const totalCmc =
+      improved.cards.reduce(
+        (sum, card) =>
+          sum +
+          (Number(card.cmc) || 0),
+        0
+      );
+
+    deckData.stats.avgCmc =
+      improved.cards.length > 0
+        ? totalCmc /
+          improved.cards.length
+        : 0;
+
+    // ---------- RENDER FINAL ----------
+    const finalAvailableNames =
+      new Set(
+        [
+          commander,
+          ...deckData.cards
+        ].map(
+          card =>
+            normalizeCardName(
+              card.name
+            )
+        )
+      );
 
     const scoringContext = {
       commanderProfile,
       commanderSynergyMap,
+
       deckSynergyMap:
         computeDeckSynergyMap(
           deckData.cards,
@@ -1242,6 +1721,7 @@ async function handleSubmit(event) {
             ...deckData.cards
           ]
         ),
+
       cooccurrenceMap,
       theme
     };
@@ -1255,69 +1735,123 @@ async function handleSubmit(event) {
       );
 
     const ownedCards =
-      chosenCards.filter(card =>
-        collectionCounts.has(
-          normalizeCardName(card.name)
-        )
+      chosenCards.filter(
+        card =>
+          collectionCounts.has(
+            normalizeCardName(
+              card.name
+            )
+          )
       ).length;
 
     const incompleteNote =
       chosenCards.length < 99
-        ? ` · Aviso: solo se han podido ` +
-          `seleccionar ${chosenCards.length} cartas.`
-        : '';
+        ? ` · Aviso: solo ` +
+          `${chosenCards.length} ` +
+          "cartas."
+        : "";
+
+    const finalNonLands =
+      chosenCards.filter(
+        card =>
+          !(
+            card.type_line || ""
+          )
+            .toLowerCase()
+            .includes("land")
+      );
+
+    const globalEvaluation =
+      scoreWholeDeck({
+        cards: finalNonLands,
+        roleTargets: templates,
+        commanderProfile,
+        theme
+      });
+
+    lastGeneratedDeck =
+      chosenCards;
+
+    lastGeneratedCommander =
+      commander;
+
+    if (exportButton) {
+      exportButton.hidden = false;
+    }
 
     updateText(
-      'status',
+      "status",
       `Comandante: ${commander.name}`
     );
 
     updateText(
-      'summary',
+      "summary",
       `${chosenCards.length} cartas · ` +
-      `${ownedCards} en colección · ` +
-      `Inversión: $${deckData.stats.cost.toFixed(2)} · ` +
-      `CMC medio: ${deckData.stats.avgCmc.toFixed(2)}` +
-      incompleteNote
+        `${ownedCards} en colección · ` +
+        `Inversión: $${deckData.stats.cost.toFixed(
+          2
+        )} · ` +
+        `CMC medio: ${deckData.stats.avgCmc.toFixed(
+          2
+        )} · ` +
+        `Coherencia: ${globalEvaluation.total.toFixed(
+          1
+        )} · ` +
+        `Swaps: ${
+          deckData.stats.swaps || 0
+        }` +
+        incompleteNote
     );
   } catch (error) {
-    console.error('', error);
+    console.error("[v0]", error);
 
     updateText(
-      'status',
+      "status",
       `Error: ${
         error instanceof Error
           ? error.message
-          : 'Error desconocido'
+          : "Error desconocido"
       }`
     );
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = 'Generar Mazo';
+
+    submitButton.textContent =
+      "Generar Mazo";
 
     document.body.classList.remove(
-      'loading'
+      "loading"
     );
   }
 }
 
-if (typeof document !== 'undefined') {
-  const form = document.getElementById(
-    'deck-form'
-  );
+if (typeof document !== "undefined") {
+  const form =
+    document.getElementById(
+      "deck-form"
+    );
 
   if (form) {
     form.addEventListener(
-      'submit',
+      "submit",
       handleSubmit
     );
 
+    document
+      .getElementById(
+        "export-btn"
+      )
+      ?.addEventListener(
+        "click",
+        exportCurrentDeck
+      );
+
     console.log(
-      'Event listener attached'
+      "[v0] Event listener attached"
     );
   } else {
     console.error(
-      'ERROR: deck-form not found!'
+      "[v0] ERROR: deck-form not found!"
     );
   }
 }
