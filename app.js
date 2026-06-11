@@ -1,4 +1,4 @@
-console.log("[v0] app.js starting to load...");
+console.log("app.js starting to load...");
 
 import {
   buildConsistentNonLandDeck,
@@ -692,6 +692,71 @@ async function fetchEdhrecData(
   }
 }
 
+function compareWithAverageDeck({
+  generatedDeck,
+  averageDeck
+}) {
+  if (
+    !Array.isArray(averageDeck) ||
+    averageDeck.length < 20
+  ) {
+    return null;
+  }
+
+  const generatedNames = new Set(
+    generatedDeck.map(card =>
+      normalizeCardName(card.name)
+    )
+  );
+
+  const averageNames = new Set(
+    averageDeck.map(card =>
+      normalizeCardName(card.name)
+    )
+  );
+
+  const shared = averageDeck.filter(card =>
+    generatedNames.has(
+      normalizeCardName(card.name)
+    )
+  );
+
+  const missingPopular = averageDeck.filter(card =>
+    !generatedNames.has(
+      normalizeCardName(card.name)
+    )
+  );
+
+  const unusualPicks = generatedDeck.filter(card =>
+    !averageNames.has(
+      normalizeCardName(card.name)
+    )
+  );
+
+  return {
+    shared,
+    missingPopular,
+    unusualPicks,
+    overlapRatio:
+      shared.length / averageDeck.length
+  };
+}
+
+function formatEdhrecComparisonSummary(comparison) {
+  if (!comparison) {
+    return "";
+  }
+
+  const percentage = Math.round(
+    comparison.overlapRatio * 100
+  );
+
+  return (
+    ` · EDHREC: ${comparison.shared.length} comunes` +
+    ` (${percentage}%)`
+  );
+}
+
 // ---------- RENDER ----------
 const ROLE_META = {
   land: {
@@ -1292,6 +1357,35 @@ function updateText(id, text) {
   }
 }
 
+function formatCoherenceScore(rawScore) {
+  /*
+   * scoreWholeDeck devuelve una puntuación interna,
+   * no una nota pensada para mostrarse directamente.
+   *
+   * Esta conversión aproxima:
+   * -40  => 0/100
+   * 220  => 100/100
+   */
+  const normalized = Math.round(
+    ((rawScore + 40) / 260) * 100
+  );
+
+  const clamped = Math.max(
+    0,
+    Math.min(100, normalized)
+  );
+
+  let label = "baja";
+
+  if (clamped >= 75) {
+    label = "alta";
+  } else if (clamped >= 45) {
+    label = "media";
+  }
+
+  return `${clamped}/100 (${label})`;
+}
+
 // ---------- FORMULARIO ----------
 async function handleSubmit(event) {
   event.preventDefault();
@@ -1769,6 +1863,18 @@ async function handleSubmit(event) {
         theme
       });
 
+    const edhrecComparison =
+      compareWithAverageDeck({
+        generatedDeck: chosenCards,
+        averageDeck:
+          edhrecData?.averageDeck || []
+      });
+
+    const edhrecSummary =
+      formatEdhrecComparisonSummary(
+        edhrecComparison
+      );
+
     lastGeneratedDeck =
       chosenCards;
 
@@ -1794,16 +1900,17 @@ async function handleSubmit(event) {
         `CMC medio: ${deckData.stats.avgCmc.toFixed(
           2
         )} · ` +
-        `Coherencia: ${globalEvaluation.total.toFixed(
-          1
+        `Coherencia: ${formatCoherenceScore(
+          globalEvaluation.total
         )} · ` +
         `Swaps: ${
           deckData.stats.swaps || 0
         }` +
+        edhrecSummary +
         incompleteNote
     );
   } catch (error) {
-    console.error("[v0]", error);
+    console.error("", error);
 
     updateText(
       "status",
@@ -1847,11 +1954,11 @@ if (typeof document !== "undefined") {
       );
 
     console.log(
-      "[v0] Event listener attached"
+      "Event listener attached"
     );
   } else {
     console.error(
-      "[v0] ERROR: deck-form not found!"
+      "ERROR: deck-form not found!"
     );
   }
 }

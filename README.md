@@ -14,6 +14,32 @@ Entre las limitaciones actuales se encuentran:
 
 El objetivo actual es crear más casos de prueba, mejorar la explicación de las puntuaciones y comparar los resultados con mazos reales.
 
+## Servidor opcional de EDHREC
+
+La aplicación funciona usando únicamente Scryfall.
+
+Opcionalmente, puede ejecutarse un servidor local en Python para obtener cartas populares y cartas con sinergia asociadas a un comandante. Estos datos se usan como señal adicional de puntuación y para comparar el mazo generado contra una lista popular aproximada.
+
+Instalación:
+
+```bash
+pip install -r requirements.txt
+```
+
+Ejecución:
+
+```bash
+uvicorn server:app --reload --port 8000
+```
+
+Endpoint usado por la aplicación:
+
+```bash
+http://localhost:8000/api/commander/:name
+```
+
+Si el servidor no está disponible, la aplicación continúa funcionando normalmente.
+
 ## Aviso
 
 Este proyecto usa datos de cartas proporcionados por Scryfall.
