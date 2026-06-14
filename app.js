@@ -1295,7 +1295,7 @@ export function formatDeckList(
   return lines.join("\n");
 }
 
-function exportCurrentDeck() {
+async function copyCurrentDeckToClipboard() {
   if (
     !lastGeneratedDeck ||
     !lastGeneratedCommander
@@ -1308,44 +1308,51 @@ function exportCurrentDeck() {
     lastGeneratedDeck
   );
 
-  const blob = new Blob(
-    [content],
-    {
-      type:
-        "text/plain;charset=utf-8"
+  const exportButton =
+    document.getElementById("export-btn");
+
+  const showCopiedState = () => {
+    if (!exportButton) {
+      return;
     }
-  );
 
-  const url =
-    URL.createObjectURL(blob);
+    const previousText =
+      exportButton.textContent;
 
-  const link =
-    document.createElement("a");
+    exportButton.textContent =
+      "Lista copiada";
 
-  const safeName =
-    lastGeneratedCommander.name
-      .replace(
-        /[^a-z0-9]+/gi,
-        "-"
-      )
-      .replace(
-        /^-|-$/g,
-        ""
-      )
-      .toLowerCase();
+    setTimeout(() => {
+      exportButton.textContent =
+        previousText || "Copiar lista";
+    }, 1600);
+  };
 
-  link.href = url;
+  try {
+    await navigator.clipboard.writeText(
+      content
+    );
 
-  link.download =
-    `${safeName || "commander"}` +
-    "-deck.txt";
+    showCopiedState();
+  } catch {
+    const textarea =
+      document.createElement("textarea");
 
-  document.body.appendChild(link);
+    textarea.value = content;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "-9999px";
 
-  link.click();
-  link.remove();
+    document.body.appendChild(textarea);
 
-  URL.revokeObjectURL(url);
+    textarea.select();
+    document.execCommand("copy");
+
+    textarea.remove();
+
+    showCopiedState();
+  }
 }
 
 function updateText(id, text) {
@@ -1950,7 +1957,7 @@ if (typeof document !== "undefined") {
       )
       ?.addEventListener(
         "click",
-        exportCurrentDeck
+        copyCurrentDeckToClipboard
       );
 
     console.log(
